@@ -7,26 +7,59 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
+import android.content.Intent
+import android.view.MenuItem
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
+import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
-    val menuItems = arrayOf("Wczytaj plik", "Pliki testowe", "Mapa pamięci", "Ustawienia")
+
+    lateinit var toggle : ActionBarDrawerToggle
+    lateinit var  drawerLayout: DrawerLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val menuSpinner=findViewById<Spinner>(R.id.menu)
-        val arrayAdapter=ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, menuItems)
-        menuSpinner.adapter=arrayAdapter
-        menuSpinner.onItemSelectedListener=object:AdapterView.OnItemSelectedListener{
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                Toast.makeText(applicationContext,"selected item is = "+menuItems[p2], Toast.LENGTH_SHORT).show()
-            }
+        drawerLayout = findViewById(R.id.drawerLayout)
+        val navView : NavigationView = findViewById(R.id.nav_view)
 
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                TODO("Not yet implemented")
-            }
+        toggle = ActionBarDrawerToggle(this,drawerLayout,R.string.open,R.string.close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        navView.setNavigationItemSelectedListener {
+
+            it.isChecked=true
+
+            when(it.itemId){
+                R.id.wczytaj_plik -> replaceFragment(WczytajPlik(),it.title.toString())
+                R.id.pliki_testowe ->replaceFragment(PlikiTestowe(),it.title.toString())
+                R.id.mapa_pamięci ->replaceFragment(MapaPamieci(),it.title.toString())
+                R.id.ustawienia->replaceFragment(Ustawienia(),it.title.toString())
+            }
+            true
         }
+    }
 
+    private fun replaceFragment(fragment : Fragment, title:String){
+        val fragmentManager = supportFragmentManager
+        val fragmentTransaction = fragmentManager.beginTransaction()
+        fragmentTransaction.replace(R.id.frameLayout,fragment)
+        fragmentTransaction.commit()
+        drawerLayout.closeDrawers()
+        setTitle(title)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item)){return true}
+        return super.onOptionsItemSelected(item)
     }
 }
+
+
+
