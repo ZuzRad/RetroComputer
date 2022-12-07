@@ -114,52 +114,123 @@ class CPU() {
 
     private fun IMM() : UByte {
         absoluteAddress = PC++
+
         return 0U
     }
     private fun IMP() : UByte {
         fetched = A
+
         return 0U
     }
     private fun ZP0() : UByte {
         absoluteAddress = bus.read(PC).toUShort()
         PC++
         absoluteAddress = absoluteAddress and 0x00FFU
+
         return 0U
     }
     private fun ZPX() : UByte {
         absoluteAddress = (bus.read(PC) + X).toUShort()
         PC++
         absoluteAddress = absoluteAddress and 0x00FFU
+
         return 0U
     }
     private fun ZPY() : UByte {
         absoluteAddress = (bus.read(PC) + Y).toUShort()
         PC++
         absoluteAddress = absoluteAddress and 0x00FFU
+
         return 0U
     }
     private fun REL() : UByte {
+        relativeAddress = bus.read(PC).toUShort()
+        PC++
+        if ((relativeAddress and 0x80U) > 0U) {
+            relativeAddress = relativeAddress or 0xFF00U
+        }
+
         return 0U
     }
     private fun ABS() : UByte {
-        val lo : UShort = bus.read(PC).toUShort()
+        val lo : Int = bus.read(PC).toInt()
         PC++
+        val hi : Int = bus.read(PC).toInt()
+        PC++
+
+        absoluteAddress = ((hi shl 8) or lo).toUShort()
+
         return 0U
     }
     private fun ABX() : UByte {
-        return 0U
+        val lo : Int = bus.read(PC).toInt()
+        PC++
+        val hi : Int = bus.read(PC).toInt()
+        PC++
+
+        absoluteAddress = ((hi shl 8) or lo).toUShort()
+        absoluteAddress = (absoluteAddress + X.toUShort()).toUShort()
+
+        return if ((absoluteAddress and 0xFF00U).toInt() != (hi shl 8)) {
+            1U
+        } else {
+            0u
+        }
     }
     private fun ABY() : UByte {
+        val lo : Int = bus.read(PC).toInt()
+        PC++
+        val hi : Int = bus.read(PC).toInt()
+        PC++
+
+        absoluteAddress = ((hi shl 8) or lo).toUShort()
+        absoluteAddress = (absoluteAddress + Y.toUShort()).toUShort()
+
+        return if ((absoluteAddress and 0xFF00U).toInt() != (hi shl 8)) {
+            1U
+        } else {
+            0u
+        }
         return 0U
     }
     private fun IND() : UByte {
+        val ptr_lo : Int = bus.read(PC).toInt()
+        PC++
+        val ptr_hi : Int = bus.read(PC).toInt()
+        PC++
+
+        val ptr : Int = (ptr_hi shl 8) or ptr_lo
+
+        absoluteAddress = (bus.read((ptr + 1).toUShort()).toInt() shl 8).toUShort() or bus.read((ptr).toUShort()).toUShort()
+
         return 0U
     }
     private fun IZX() : UByte {
+        val t: UShort = bus.read(PC).toUShort()
+        PC++
+
+        val lo: Int = bus.read((t+X).toUShort() and 0x00FFU).toInt()
+        val hi: Int = bus.read((t+X+1U).toUShort() and 0x00FFU).toInt()
+
+        absoluteAddress = ((hi shl 8) or lo).toUShort()
+
         return 0U
     }
     private fun IZY() : UByte {
-        return 0U
+        val t: UShort = bus.read(PC).toUShort()
+        PC++
+
+        val lo: Int = bus.read(t and 0x00FFU).toInt()
+        val hi: Int = bus.read((t+1U).toUShort() and 0x00FFU).toInt()
+
+        absoluteAddress = ((hi shl 8) or lo).toUShort()
+        absoluteAddress = (absoluteAddress + Y.toUShort()).toUShort()
+
+        return if ((absoluteAddress and 0xFF00U).toInt() != (hi shl 8)) {
+            return 1U;
+        } else {
+            return 0U
+        }
     }
 
 //    Opcodes
