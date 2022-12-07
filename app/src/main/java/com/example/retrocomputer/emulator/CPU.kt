@@ -538,58 +538,59 @@ class CPU() {
         lookup[0x36] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
         lookup[0x2E] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
         lookup[0x3E] = Instruction("???",Opcode.XXX,AddressingMode.IMP,7U);
+        
+        //CZĘŚĆ KAMILA
+        lookup[0x6A] = Instruction("ROR",Opcode.ROR,AddressingMode.IMP,2U);
+        lookup[0x66] = Instruction("ROR",Opcode.ROR,AddressingMode.ZP0,5U);
+        lookup[0x76] = Instruction("ROR",Opcode.ROR,AddressingMode.ZPX,6U);
+        lookup[0x6E] = Instruction("ROR",Opcode.ROR,AddressingMode.ABS,6U);
+        lookup[0x7E] = Instruction("ROR",Opcode.ROR,AddressingMode.ABX,7U);
 
-        lookup[0x6A] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
-        lookup[0x66] = Instruction("???",Opcode.XXX,AddressingMode.IMP,5U);
-        lookup[0x76] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
-        lookup[0x6E] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
-        lookup[0x7E] = Instruction("???",Opcode.XXX,AddressingMode.IMP,7U);
+        lookup[0x40] = Instruction("RTI",Opcode.RTI,AddressingMode.IMP,6U);
 
-        lookup[0x40] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
+        lookup[0x60] = Instruction("RTS",Opcode.RTS,AddressingMode.IMP,6U);
 
-        lookup[0x60] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
+        lookup[0xE9] = Instruction("SBC",Opcode.SBC,AddressingMode.IMM,2U);
+        lookup[0xE5] = Instruction("SBC",Opcode.SBC,AddressingMode.ZP0,3U);
+        lookup[0xED] = Instruction("SBC",Opcode.SBC,AddressingMode.ZPX,4U);
+        lookup[0xFD] = Instruction("SBC",Opcode.SBC,AddressingMode.ABS,4U);
+        lookup[0xF5] = Instruction("SBC",Opcode.SBC,AddressingMode.ABX,4U);
+        lookup[0xF9] = Instruction("SBC",Opcode.SBC,AddressingMode.ABY,4U);
+        lookup[0xE1] = Instruction("SBC",Opcode.SBC,AddressingMode.IZX,6U);
+        lookup[0xF1] = Instruction("SBC",Opcode.SBC,AddressingMode.IZY,5U);
 
-        lookup[0xE9] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
-        lookup[0xE5] = Instruction("???",Opcode.XXX,AddressingMode.IMP,3U);
-        lookup[0xF5] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0xED] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0xFD] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0xF9] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0xE1] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
-        lookup[0xF1] = Instruction("???",Opcode.XXX,AddressingMode.IMP,5U);
+        lookup[0x38] = Instruction("SEC",Opcode.SEC,AddressingMode.IMP,2U);
 
-        lookup[0x38] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0xF8] = Instruction("SED",Opcode.SED,AddressingMode.IMP,2U);
 
-        lookup[0xF8] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0x78] = Instruction("SEI",Opcode.SEI,AddressingMode.IMP,2U);
 
-        lookup[0x78] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0x85] = Instruction("STA",Opcode.STA,AddressingMode.ZP0,3U);
+        lookup[0x95] = Instruction("STA",Opcode.STA,AddressingMode.ZPX,4U);
+        lookup[0x8D] = Instruction("STA",Opcode.STA,AddressingMode.ABS,4U);
+        lookup[0x9D] = Instruction("STA",Opcode.STA,AddressingMode.ABX,5U);
+        lookup[0x99] = Instruction("STA",Opcode.STA,AddressingMode.ABY,5U);
+        lookup[0x81] = Instruction("STA",Opcode.STA,AddressingMode.IZX,6U);
+        lookup[0x91] = Instruction("STA",Opcode.STA,AddressingMode.IZY,6U);
 
-        lookup[0x85] = Instruction("???",Opcode.XXX,AddressingMode.IMP,3U);
-        lookup[0x95] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0x8D] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0x9D] = Instruction("???",Opcode.XXX,AddressingMode.IMP,5U);
-        lookup[0x99] = Instruction("???",Opcode.XXX,AddressingMode.IMP,5U);
-        lookup[0x81] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
-        lookup[0x91] = Instruction("???",Opcode.XXX,AddressingMode.IMP,6U);
+        lookup[0x86] = Instruction("STX",Opcode.STX,AddressingMode.ZP0,3U);
+        lookup[0x96] = Instruction("STX",Opcode.STX,AddressingMode.ZPY,4U);
+        lookup[0x8E] = Instruction("STX",Opcode.STX,AddressingMode.ABS,4U);
 
-        lookup[0x86] = Instruction("???",Opcode.XXX,AddressingMode.IMP,3U);
-        lookup[0x96] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0x8E] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
+        lookup[0x84] = Instruction("STY",Opcode.STY,AddressingMode.ZP0,3U);
+        lookup[0x94] = Instruction("STY",Opcode.STY,AddressingMode.ZPX,4U);
+        lookup[0x8C] = Instruction("STY",Opcode.STY,AddressingMode.ABS,4U);
 
-        lookup[0x84] = Instruction("???",Opcode.XXX,AddressingMode.IMP,3U);
-        lookup[0x94] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
-        lookup[0x8C] = Instruction("???",Opcode.XXX,AddressingMode.IMP,4U);
+        lookup[0xAA] = Instruction("TAX",Opcode.TAX,AddressingMode.IMP,2U);
 
-        lookup[0xAA] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0xA8] = Instruction("TAY",Opcode.TAY,AddressingMode.IMP,2U);
 
-        lookup[0xA8] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0xBA] = Instruction("TSX",Opcode.TSX,AddressingMode.IMP,2U);
 
-        lookup[0xBA] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0x8A] = Instruction("TXA",Opcode.TXA,AddressingMode.IMP,2U);
 
-        lookup[0x8A] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0x9A] = Instruction("TXS",Opcode.TXS,AddressingMode.IMP,2U);
 
-        lookup[0x9A] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
-
-        lookup[0x98] = Instruction("???",Opcode.XXX,AddressingMode.IMP,2U);
+        lookup[0x98] = Instruction("TYA",Opcode.TYA,AddressingMode.IMP,2U);
     }
 }
