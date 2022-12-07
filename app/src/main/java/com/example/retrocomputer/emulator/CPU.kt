@@ -593,9 +593,9 @@ class CPU() {
 //        SBC
         lookup[0xE9] = Instruction("SBC",Opcode.SBC,AddressingMode.IMM,2U);
         lookup[0xE5] = Instruction("SBC",Opcode.SBC,AddressingMode.ZP0,3U);
-        lookup[0xED] = Instruction("SBC",Opcode.SBC,AddressingMode.ZPX,4U);
-        lookup[0xFD] = Instruction("SBC",Opcode.SBC,AddressingMode.ABS,4U);
-        lookup[0xF5] = Instruction("SBC",Opcode.SBC,AddressingMode.ABX,4U);
+        lookup[0xF5] = Instruction("SBC",Opcode.SBC,AddressingMode.ZPX,4U);
+        lookup[0xED] = Instruction("SBC",Opcode.SBC,AddressingMode.ABS,4U);
+        lookup[0xFD] = Instruction("SBC",Opcode.SBC,AddressingMode.ABX,4U);
         lookup[0xF9] = Instruction("SBC",Opcode.SBC,AddressingMode.ABY,4U);
         lookup[0xE1] = Instruction("SBC",Opcode.SBC,AddressingMode.IZX,6U);
         lookup[0xF1] = Instruction("SBC",Opcode.SBC,AddressingMode.IZY,5U);
