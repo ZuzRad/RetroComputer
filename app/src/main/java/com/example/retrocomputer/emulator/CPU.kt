@@ -128,18 +128,121 @@ class CPU() {
     }
 
 //    Opcodes
-    enum class Opcodes {
-        ADC, AND, ASL, BIT, BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ, BRK, CMP, CPX, CPY, DEC, EOR, CLC,
-        SEC, CLI, SEI, CLV, CLD, SED, INC, JMP, JSR, LDA, LDX, LDY, LSR, NOP, ORA, TAX, TXA, DEX, INX,
-        TAY, TYA, DEY, INY, ROR, ROL, RTI, RTS, SBC, STA, TXS, TSX, PHA, PLA, PHP, PLP, STX, STY, XXX
+
+    enum class Opcode {
+        XXX, ADC, AND, ASL, BIT, BPL, BMI, BVC, BVS, BCC, BCS, BNE,
+//        BEQ, BRK, CMP, CPX, CPY, DEC, EOR, CLC,
+//        SEC, CLI, SEI, CLV, CLD, SED, INC, JMP, JSR, LDA, LDX, LDY, LSR, NOP, ORA, TAX, TXA, DEX, INX,
+//        TAY, TYA, DEY, INY, ROR, ROL, RTI, RTS, SBC, STA, TXS, TSX, PHA, PLA, PHP, PLP, STX, STY
+    }
+
+    private fun handleOpcodes(opcode: Opcode): UByte {
+        return when(opcode) {
+            Opcode.XXX -> XXX()
+            Opcode.ADC -> ADC()
+            Opcode.AND -> AND()
+            Opcode.ASL -> ASL()
+            Opcode.BIT -> BIT()
+            Opcode.BPL -> BPL()
+            Opcode.BMI -> BMI()
+            Opcode.BVC -> BVC()
+            Opcode.BVS -> BVS()
+            Opcode.BCC -> BCC()
+            Opcode.BCS -> BCS()
+            Opcode.BNE -> BNE()
+//            Opcode.BEQ -> BEQ()
+//            Opcode.BRK -> BRK()
+//            Opcode.CMP -> CMP()
+//            Opcode.CPX -> CPX()
+//            Opcode.CPY -> CPY()
+//            Opcode.DEC -> DEC()
+//            Opcode.EOR -> EOR()
+//            Opcode.CLC -> CLC()
+//            Opcode.SEC -> SEC()
+//            Opcode.CLI -> CLI()
+//            Opcode.SEI -> SEI()
+//            Opcode.CLV -> CLV()
+//            Opcode.CLD -> CLD()
+//            Opcode.SED -> SED()
+//            Opcode.INC -> INC()
+//            Opcode.JMP -> JMP()
+//            Opcode.JSR -> JSR()
+//            Opcode.LDA -> LDA()
+//            Opcode.LDX -> LDX()
+//            Opcode.LDY -> LDY()
+//            Opcode.LSR -> LSR()
+//            Opcode.NOP -> NOP()
+//            Opcode.ORA -> ORA()
+//            Opcode.TAX -> TAX()
+//            Opcode.TXA -> TXA()
+//            Opcode.DEX -> DEX()
+//            Opcode.INX -> INX()
+//            Opcode.TAY -> TAY()
+//            Opcode.TYA -> TYA()
+//            Opcode.DEY -> DEY()
+//            Opcode.INY -> INY()
+//            Opcode.ROR -> ROR()
+//            Opcode.ROL -> ROL()
+//            Opcode.RTI -> RTI()
+//            Opcode.RTS -> RTS()
+//            Opcode.SBC -> SBC()
+//            Opcode.STA -> STA()
+//            Opcode.TXS -> TXS()
+//            Opcode.TSX -> TSX()
+//            Opcode.PHA -> PHA()
+//            Opcode.PLA -> PLA()
+//            Opcode.PHP -> PHP()
+//            Opcode.PLP -> PLP()
+//            Opcode.STX -> STX()
+//            Opcode.STY -> STY()
+        }
+    }
+
+    private fun XXX() : UByte {
+        return 0U
+    }
+    private fun ADC() : UByte {
+        return 0U
+    }
+    private fun AND() : UByte {
+        return 0U
+    }
+    private fun ASL() : UByte {
+        return 0U
+    }
+    private fun BIT() : UByte {
+        return 0U
+    }
+    private fun BPL() : UByte {
+        return 0U
+    }
+    private fun BMI() : UByte {
+        return 0U
+    }
+    private fun BVC() : UByte {
+        return 0U
+    }
+    private fun BVS() : UByte {
+        return 0U
+    }
+    private fun BCC() : UByte {
+        return 0U
+    }
+    private fun BCS() : UByte {
+        return 0U
+    }
+    private fun BNE() : UByte {
+        return 0U
     }
 
     data class Instruction (
-        val name: String = "???",
-        val opcode: UByte,
+        val name: String,
+        val opcode: Opcode,
         val mode: AddressingMode,
-        val cycles: UByte = 0U
+        val cycles: UByte,
     )
 
-    var lookup = List<Instruction>(0x100) { i -> i. }
+    var lookup = List<Instruction>(0x100) {
+        Instruction("???", Opcode.XXX, AddressingMode.IMP, 2U)
+    }
 }
