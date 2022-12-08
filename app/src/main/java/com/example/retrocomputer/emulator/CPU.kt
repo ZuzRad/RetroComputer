@@ -642,7 +642,7 @@ class CPU() {
         }
         return 0U
     }
-    private fun ORA() : UByte {
+     private fun ORA() : UByte {
         fetch()
         A = A or fetched
         setFlag(flagShiftZ, A == (0x00U).toUByte())
@@ -650,39 +650,75 @@ class CPU() {
         return 1U
     }
     private fun TAX() : UByte {
+        X = A
+        setFlag(flagShiftZ, X == (0x00U).toUByte())
+        setFlag(flagShiftN, (X and 0x80U) > 0U)
         return 0U
     }
     private fun TXA() : UByte {
+        A = X
+        setFlag(flagShiftZ, A == (0x00U).toUByte())
+        setFlag(flagShiftN, (A and 0x80U) > 0U)
         return 0U
     }
     private fun DEX() : UByte {
         X--
         setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and (0x80U))>0U)
+        setFlag(flagShiftN, (X and (0x80U)) > 0U)
         return 0U
     }
     private fun INX() : UByte {
+        X++
+        setFlag(flagShiftZ, X == (0x00U).toUByte())
+        setFlag(flagShiftN, (X and 0x80U) > 0U)
         return 0U
     }
     private fun TAY() : UByte {
+        Y = A
+        setFlag(flagShiftZ, Y == (0x00U).toUByte())
+        setFlag(flagShiftN, (Y and 0x80U) > 0U)
         return 0U
     }
     private fun TYA() : UByte {
+        A = Y
+        setFlag(flagShiftZ, A == (0x00U).toUByte())
+        setFlag(flagShiftN, (A and 0x80U) > 0U)
         return 0U
     }
     private fun DEY() : UByte {
         X--
         setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and (0x80U))>0U)
+        setFlag(flagShiftN, (X and (0x80U)) > 0U)
         return 0U
     }
     private fun INY() : UByte {
+        Y++
+        setFlag(flagShiftZ, Y == (0x00U).toUByte())
+        setFlag(flagShiftN, (Y and 0x80U) > 0U)
         return 0U
     }
     private fun ROR() : UByte {
+        fetch()
+        temp = ((getFlag(flagShiftC).toUInt() shl 7) or (fetched.toUInt() shr 1)).toUShort()
+        setFlag(flagShiftC, (fetched and 0x01U) > 0U)
+        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
+        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
+        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
+            A = (temp and 0x00FFU).toUByte()
+        else
+            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
         return 0U
     }
     private fun ROL() : UByte {
+        fetch()
+        temp = (fetched.toUInt() shl 1).toUShort() or (getFlag(flagShiftC)).toUShort()
+        setFlag(flagShiftC, (temp and 0x01U) > 0U)
+        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
+        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
+        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
+            A = (temp and 0x00FFU).toUByte()
+        else
+            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
         return 0U
     }
     private fun RTI() : UByte {
@@ -713,13 +749,19 @@ class CPU() {
         return 1U
     }
     private fun STA() : UByte {
+        bus.write(absoluteAddress, A)
         return 0U
     }
     private fun TXS() : UByte {
+        SP = X
         return 0U
     }
     private fun TSX() : UByte {
+        X = SP
+        setFlag(flagShiftZ, X == (0x00U).toUByte())
+        setFlag(flagShiftN, (X and 0x80U)>0U)
         return 0U
+
     }
     private fun PHA() : UByte {
         bus.write((0x0100U + SP).toUShort(), A)
