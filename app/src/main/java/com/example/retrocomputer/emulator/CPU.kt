@@ -22,14 +22,14 @@ class CPU() {
     var flagV : Boolean = false  // Overflow
     var flagN : Boolean = false  // Negative
 
-    var flagShiftC : UByte = (1 shl 0).toUByte()
-    var flagShiftZ : UByte = (1 shl 1).toUByte()
-    var flagShiftI : UByte = (1 shl 2).toUByte()
-    var flagShiftD : UByte = (1 shl 3).toUByte()
-    var flagShiftB : UByte = (1 shl 4).toUByte()
-    var flagShiftU : UByte = (1 shl 5).toUByte()
-    var flagShiftV : UByte = (1 shl 6).toUByte()
-    var flagShiftN : UByte = (1 shl 7).toUByte()
+    var flagShiftC : UByte = (1U shl 0).toUByte()
+    var flagShiftZ : UByte = (1U shl 1).toUByte()
+    var flagShiftI : UByte = (1U shl 2).toUByte()
+    var flagShiftD : UByte = (1U shl 3).toUByte()
+    var flagShiftB : UByte = (1U shl 4).toUByte()
+    var flagShiftU : UByte = (1U shl 5).toUByte()
+    var flagShiftV : UByte = (1U shl 6).toUByte()
+    var flagShiftN : UByte = (1U shl 7).toUByte()
 
     private fun setFlag(flagShift : UByte, flagVal : Boolean) {
         status = if (flagVal) {
@@ -396,8 +396,8 @@ class CPU() {
         fetch()
         temp = (A and fetched).toUShort()
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
-        setFlag(flagShiftN, (fetched and (1 shl 7).toUByte()) > 0U)
-        setFlag(flagShiftV, (fetched and (1 shl 6).toUByte()) > 0U)
+        setFlag(flagShiftN, (fetched and (1U shl 7).toUByte()) > 0U)
+        setFlag(flagShiftV, (fetched and (1U shl 6).toUByte()) > 0U)
         return 0U
     }
     private fun BPL() : UByte {
@@ -734,15 +734,24 @@ class CPU() {
         return 0U
     }
     private fun PHP() : UByte {
+        bus.write((0x0100U + SP).toUShort(), status or flagShiftB or flagShiftU)
+        setFlag(flagShiftB, false)
+        setFlag(flagShiftU, false)
+        SP--
         return 0U
     }
     private fun PLP() : UByte {
+        SP++
+        status = bus.read((0x0100U + SP).toUShort())
+        setFlag(flagShiftU, true)
         return 0U
     }
     private fun STX() : UByte {
+        bus.write(absoluteAddress, X)
         return 0U
     }
     private fun STY() : UByte {
+        bus.write(absoluteAddress, Y)
         return 0U
     }
 
