@@ -35,7 +35,7 @@ class CPU() {
         status = if (flagVal) {
             status or flagShift
         } else {
-            status and flagShift
+            status and flagShift.inv()
         }
     }
 
@@ -45,31 +45,41 @@ class CPU() {
 
 //    Functions / Other Pins
 
+    var fetched : UByte = 0x00U
+
+    var absoluteAddress : UShort = 0x0000U
+    var relativeAddress : UShort = 0x0000U
+    var opcode : UByte = 0x00U
+    var cycles : Int = 0
+    var temp : UShort = 0U
+
     private fun clock() {
         if (cycles == 0) {
             opcode = bus.read(PC)
+            setFlag(flagShiftU, true)
             PC++
 
             cycles = lookup[opcode.toInt()].cycles
             val additional_cycle1 : UByte = handleAddressingMode(lookup[opcode.toInt()].mode)
             val additional_cycle2 : UByte = handleOpcodes(lookup[opcode.toInt()].opcode)
             cycles += (additional_cycle1 and additional_cycle2).toInt()
+            setFlag(flagShiftU, true)
         }
         cycles--
     }
 
     private fun reset() {
-        var A: UByte = 0x00U
-        var X: UByte = 0x00U
-        var Y: UByte = 0x00U
-        var SP: UByte = 0xFDU
-        var status: UByte = ((0x00U).toUByte() or flagShiftU)
-
         absoluteAddress = 0xFFFCU
         val lo : UInt = bus.read((absoluteAddress + 0U).toUShort()).toUInt()
         val hi : UInt = bus.read((absoluteAddress + 1U).toUShort()).toUInt()
 
         PC = ((hi shl 8) or lo).toUShort()
+
+        var A: UByte = 0x00U
+        var X: UByte = 0x00U
+        var Y: UByte = 0x00U
+        var SP: UByte = 0xFDU
+        var status: UByte = ((0x00U).toUByte() or flagShiftU)
 
         relativeAddress = 0x0000U
         absoluteAddress = 0x0000U
@@ -125,14 +135,6 @@ class CPU() {
         return fetched
     }
 
-    var fetched : UByte = 0x00U
-
-    var absoluteAddress : UShort = 0x0000U
-    var relativeAddress : UShort = 0x0000U
-    var opcode : UByte = 0x00U
-    var cycles : Int = 0
-    var temp : UShort = 0U
-
 //    Addressing modes
 
     enum class AddressingMode {
@@ -169,33 +171,28 @@ class CPU() {
 
     private fun IMM() : UByte {
         absoluteAddress = PC++
-
         return 0U
     }
     private fun IMP() : UByte {
         fetched = A
-
         return 0U
     }
     private fun ZP0() : UByte {
         absoluteAddress = bus.read(PC).toUShort()
         PC++
         absoluteAddress = absoluteAddress and 0x00FFU
-
         return 0U
     }
     private fun ZPX() : UByte {
         absoluteAddress = (bus.read(PC) + X).toUShort()
         PC++
         absoluteAddress = absoluteAddress and 0x00FFU
-
         return 0U
     }
     private fun ZPY() : UByte {
         absoluteAddress = (bus.read(PC) + Y).toUShort()
         PC++
         absoluteAddress = absoluteAddress and 0x00FFU
-
         return 0U
     }
     private fun REL() : UByte {
@@ -204,7 +201,6 @@ class CPU() {
         if ((relativeAddress and 0x80U) > 0U) {
             relativeAddress = relativeAddress or 0xFF00U
         }
-
         return 0U
     }
     private fun ABS() : UByte {
@@ -229,7 +225,7 @@ class CPU() {
         return if ((absoluteAddress and 0xFF00U) != (hi shl 8).toUShort()) {
             1U
         } else {
-            0u
+            0U
         }
     }
     private fun ABY() : UByte {
@@ -244,7 +240,7 @@ class CPU() {
         return if ((absoluteAddress and 0xFF00U) != (hi shl 8).toUShort()) {
             1U
         } else {
-            0u
+            0U
         }
         return 0U
     }
@@ -256,7 +252,11 @@ class CPU() {
 
         val ptr : UInt = (ptr_hi shl 8) or ptr_lo
 
-        absoluteAddress = (bus.read((ptr + 1U).toUShort()).toUInt() shl 8).toUShort() or bus.read((ptr + 0U).toUShort()).toUShort()
+        if (ptr_lo == 0x00FFU) {
+            absoluteAddress = (bus.read((ptr and 0xFF00U).toUShort()).toUInt() shl 8).toUShort() or bus.read((ptr + 0U).toUShort()).toUShort()
+        } else {
+            absoluteAddress = (bus.read((ptr + 1U).toUShort()).toUInt() shl 8).toUShort() or bus.read((ptr + 0U).toUShort()).toUShort()
+        }
 
         return 0U
     }
@@ -368,8 +368,8 @@ class CPU() {
         temp = (A.toUShort() + fetched.toUShort() + getFlag(flagShiftC).toUShort()).toUShort()
         setFlag(flagShiftC, temp > 255U)
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0U).toUShort())
+        setFlag(flagShiftV, (((A.toUShort() xor fetched.toUShort()).inv() and (A.toUShort() xor temp)) and 0x0080U) > 0U)
         setFlag(flagShiftN, (temp and 0x80U) > 0U)
-        setFlag(flagShiftZ, (((A.toUShort() xor fetched.toUShort()).inv() and (A.toUShort() xor temp)) and 0x0080U) > 0U)
         A = (temp and 0x00FFU).toUByte()
         return 1U
     }
@@ -386,7 +386,7 @@ class CPU() {
         setFlag(flagShiftC, (temp and 0xFF00U) > 0U)
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
         setFlag(flagShiftN, (temp and 0x80U) > 0U)
-        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
+        if (lookup[opcode.toInt()].mode == AddressingMode.IMP)
             A = (temp and 0x00FFU).toUByte()
         else
             bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
@@ -686,9 +686,9 @@ class CPU() {
         return 0U
     }
     private fun DEY() : UByte {
-        X--
-        setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and (0x80U)) > 0U)
+        Y--
+        setFlag(flagShiftZ, Y == (0x00U).toUByte())
+        setFlag(flagShiftN, (Y and (0x80U)) > 0U)
         return 0U
     }
     private fun INY() : UByte {
@@ -699,7 +699,7 @@ class CPU() {
     }
     private fun ROR() : UByte {
         fetch()
-        temp = ((getFlag(flagShiftC).toUInt() shl 7) or (fetched.toUInt() shr 1)).toUShort()
+        temp = (getFlag(flagShiftC).toUInt() shl 7).toUShort() or (fetched.toUInt() shr 1).toUShort()
         setFlag(flagShiftC, (fetched and 0x01U) > 0U)
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
         setFlag(flagShiftN, (temp and 0x0080U) > 0U)
