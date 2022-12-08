@@ -5,14 +5,14 @@ class Bus() {
 
     fun read(addr: Int): Int {
         if (addr >= 0x0000 && addr <= 0xFFFF) {
-            return ram[addr]
+            return ram[addr and 0xFFFF]
         }
         return 0x00;
     }
 
     fun write(addr: Int, value: Int) {
         if (addr >= 0x0000 && addr <= 0xFFFF) {
-            ram[addr] = value
+            ram[addr and 0xFFFF] = value
         }
     }
 
