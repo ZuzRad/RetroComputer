@@ -484,12 +484,16 @@ class CPU() {
     }
     private fun BRK() : UByte {
         PC++
+
         setFlag(flagShiftI,true)
-        bus.write((0x0100U + SP.toUShort()).toUShort(), ((PC.toInt() shr 8).toUByte() and 0x00FFU)) //????
+        bus.write((0x0100U + SP).toUShort(), ((PC.toUInt() shr 8).toUByte() and 0x00FFU))
         SP--
-        bus.write((0x0100U + SP.toUShort()).toUShort(), (PC and 0x00FFU).toUByte())
+        bus.write((0x0100U + SP).toUShort(), (PC and 0x00FFU).toUByte())
         SP--
 
+        setFlag(flagShiftB,true)
+        bus.write((0x0100U + SP).toUShort(), status)
+        SP--
         setFlag(flagShiftB,false)
 
         PC = (bus.read(0xFFFEU)).toUShort() or (bus.read(0xFFFFU).toUInt() shl 8).toUShort()
@@ -500,7 +504,7 @@ class CPU() {
         temp = (A.toUShort() - fetched.toUShort()).toUShort()
         setFlag(flagShiftC, A >= fetched)
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U)>0U)
+        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
         return 1U
     }
     private fun CPX() : UByte {
@@ -516,7 +520,7 @@ class CPU() {
         temp = (Y.toUShort() - fetched.toUShort()).toUShort()
         setFlag(flagShiftC, Y >= fetched)
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U)>0U)
+        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
         return 0U
     }
     private fun DEC() : UByte {
@@ -524,14 +528,14 @@ class CPU() {
         temp = (fetched - 1U).toUShort()
         bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U)>0U)
+        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
         return 0U
     }
     private fun EOR() : UByte {
         fetch()
         A = A xor fetched
         setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U)>0U)
+        setFlag(flagShiftN, (A and 0x80U) > 0U)
         return 1U
     }
     private fun CLC() : UByte {
@@ -567,7 +571,7 @@ class CPU() {
         temp = (fetched + 1U).toUShort()
         bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U)>0U)
+        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
         return 0U
     }
     private fun JMP() : UByte {
@@ -577,7 +581,7 @@ class CPU() {
     private fun JSR() : UByte {
         PC--
 
-        bus.write(((0x0100U).toUByte() + SP).toUShort(), ((PC.toUInt() shr 8).toUByte() and 0x00FFU)) //????
+        bus.write(((0x0100U).toUByte() + SP).toUShort(), ((PC.toUInt() shr 8).toUByte() and 0x00FFU))
         SP--
         bus.write(((0x0100U).toUByte() + SP).toUShort(), (PC and 0x00FFU).toUByte())
         SP--
@@ -608,7 +612,7 @@ class CPU() {
     }
     private fun LSR() : UByte {
         fetch();
-        setFlag(flagShiftC, (fetched and 0x0001U)>0U);
+        setFlag(flagShiftC, (fetched and 0x0001U) > 0U)
         temp = (fetched.toUInt() shr 1).toUShort()
         setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
         setFlag(flagShiftN, (temp and 0x0080U) > 0U)
