@@ -712,8 +712,8 @@ class CPU() {
     private fun ROL() : UByte {
         fetch()
         temp = (fetched.toUInt() shl 1).toUShort() or (getFlag(flagShiftC)).toUShort()
-        setFlag(flagShiftC, (temp and 0x01U) > 0U)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
+        setFlag(flagShiftC, (temp and 0xFF00U) > 0U)
+        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
         setFlag(flagShiftN, (temp and 0x0080U) > 0U)
         if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
             A = (temp and 0x00FFU).toUByte()
@@ -734,6 +734,12 @@ class CPU() {
         return 0U
     }
     private fun RTS() : UByte {
+        SP++
+        PC = (bus.read((0x0100U + SP).toUShort()).toUShort())
+        SP++
+        PC = PC or (bus.read((0x0100U + SP).toUShort()).toUInt() shl 8).toUShort()
+
+        PC++
         return 0U
     }
     private fun SBC() : UByte {
