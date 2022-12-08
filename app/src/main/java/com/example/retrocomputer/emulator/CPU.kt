@@ -734,6 +734,12 @@ class CPU() {
         return 0U
     }
     private fun RTS() : UByte {
+        SP++
+        PC = (bus.read((0x0100U + SP).toUShort())).toUShort()
+        SP++
+        PC = PC or ((bus.read((0x0100U + SP).toUShort())).toUInt() shl 8).toUShort()
+        
+        PC++
         return 0U
     }
     private fun SBC() : UByte {
