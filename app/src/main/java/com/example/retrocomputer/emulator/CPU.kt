@@ -21,14 +21,14 @@ class CPU() {
     var flagV : Boolean = false  // Overflow
     var flagN : Boolean = false  // Negative
 
-    var flagShiftC = (1 shl 0)
-    var flagShiftZ = (1 shl 1)
-    var flagShiftI = (1 shl 2)
-    var flagShiftD = (1 shl 3)
-    var flagShiftB = (1 shl 4)
-    var flagShiftU = (1 shl 5)
-    var flagShiftV = (1 shl 6)
-    var flagShiftN = (1 shl 7)
+    var flagShiftC : UByte = (1 shl 0).toUByte()
+    var flagShiftZ : UByte = (1 shl 1).toUByte()
+    var flagShiftI : UByte = (1 shl 2).toUByte()
+    var flagShiftD : UByte = (1 shl 3).toUByte()
+    var flagShiftB : UByte = (1 shl 4).toUByte()
+    var flagShiftU : UByte = (1 shl 5).toUByte()
+    var flagShiftV : UByte = (1 shl 6).toUByte()
+    var flagShiftN : UByte = (1 shl 7).toUByte()
 
     private fun setFlag(flagShift : UByte, flag : Boolean) {
         status = if (flag) {
@@ -68,7 +68,9 @@ class CPU() {
     }
 
     private fun fetch () : UByte {
-        return 0U
+        if((lookup[opcode.toInt()].mode) != AddressingMode.IMP)
+            fetched = bus.read(absoluteAddress)
+        return fetched
     }
 
     var fetched : UByte = 0x00U
@@ -77,6 +79,7 @@ class CPU() {
     var relativeAddress : UShort = 0x0000U
     var opcode : UByte = 0x00U
     var cycles : Int = 0
+    var temp : UShort = 0U
 
 //    Addressing modes
 
@@ -309,10 +312,21 @@ class CPU() {
         return 0U
     }
     private fun ADC() : UByte {
-        return 0U
+        fetch()
+        temp = (A.toUShort() + fetched.toUShort() + getFlag(flagShiftC).toUShort()).toUShort()
+        setFlag(flagShiftC, temp > 255U)
+        setFlag(flagShiftZ, (temp and 0x00FFU).toUInt() == 0U)
+        setFlag(flagShiftN, (temp and 0x80U) > 0U)
+        setFlag(flagShiftZ, (((A.toUShort() xor fetched.toUShort()).inv() and (A.toUShort() xor temp)) and 0x0080U) > 0U)
+        A = (temp and 0x00FFU).toUByte()
+        return 1U
     }
     private fun AND() : UByte {
-        return 0U
+        fetch()
+        A = A and fetched
+        setFlag(flagShiftZ, A.toUInt() == 0x00U)
+        setFlag(flagShiftN, (A.toUInt() and 0x80U) > 0U)
+        return 1U
     }
     private fun ASL() : UByte {
         return 0U
@@ -321,27 +335,99 @@ class CPU() {
         return 0U
     }
     private fun BPL() : UByte {
+        if (getFlag(flagShiftN).toUInt() == 0U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BMI() : UByte {
+        if (getFlag(flagShiftN).toUInt() == 1U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BVC() : UByte {
+        if (getFlag(flagShiftV).toUInt() == 0U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BVS() : UByte {
+        if (getFlag(flagShiftV).toUInt() == 1U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BCC() : UByte {
+        if (getFlag(flagShiftC).toUInt() == 0U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BCS() : UByte {
+        if (getFlag(flagShiftC).toUInt() == 1U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BNE() : UByte {
+        if (getFlag(flagShiftZ).toUInt() == 0U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BEQ() : UByte {
+        if (getFlag(flagShiftZ).toUInt() == 1U) {
+            cycles++
+            absoluteAddress = (PC + relativeAddress).toUShort()
+
+            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+                cycles++
+
+            PC = absoluteAddress
+        }
         return 0U
     }
     private fun BRK() : UByte {
@@ -363,21 +449,25 @@ class CPU() {
         return 0U
     }
     private fun CLC() : UByte {
+        setFlag(flagShiftC, false)
         return 0U
     }
     private fun SEC() : UByte {
         return 0U
     }
     private fun CLI() : UByte {
+        setFlag(flagShiftI, false)
         return 0U
     }
     private fun SEI() : UByte {
         return 0U
     }
     private fun CLV() : UByte {
+        setFlag(flagShiftV, false)
         return 0U
     }
     private fun CLD() : UByte {
+        setFlag(flagShiftD, false)
         return 0U
     }
     private fun SED() : UByte {
