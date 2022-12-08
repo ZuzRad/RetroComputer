@@ -401,7 +401,7 @@ class CPU() {
         setFlag(flagShiftV, (fetched and (1 shl 6)) > 0)
         return 0
     }
-    private fun BPL() : Int {
+     private fun BPL() : Int {
         if (getFlag(flagShiftN) == (0)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -409,7 +409,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -421,7 +421,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -433,7 +433,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -445,7 +445,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -457,7 +457,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -469,7 +469,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -481,7 +481,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
@@ -493,7 +493,7 @@ class CPU() {
             if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
         return 0
     }
