@@ -381,9 +381,23 @@ class CPU() {
         return 1U
     }
     private fun ASL() : UByte {
+        fetch()
+        temp = (fetched.toUInt() shl 1).toUShort()
+        setFlag(flagShiftC, (temp and 0xFF00U) > 0U)
+        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
+        setFlag(flagShiftN, (temp and 0x80U) > 0U)
+        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
+            A = (temp and 0x00FFU).toUByte()
+        else
+            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
         return 0U
     }
     private fun BIT() : UByte {
+        fetch()
+        temp = (A and fetched).toUShort()
+        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
+        setFlag(flagShiftN, (fetched and (1 shl 7).toUByte()) > 0U)
+        setFlag(flagShiftV, (fetched and (1 shl 6).toUByte()) > 0U)
         return 0U
     }
     private fun BPL() : UByte {
