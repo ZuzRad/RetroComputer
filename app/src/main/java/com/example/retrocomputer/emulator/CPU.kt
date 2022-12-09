@@ -1,35 +1,25 @@
 package com.example.retrocomputer.emulator
 
-
-class CPU() {
-    private val bus = Bus()
+class CPU(private val bus: Bus) {
 
     //    Registers
-    var A: UByte = 0x00U      // Accumulator
-    var X: UByte = 0x00U      // Register X
-    var Y: UByte = 0x00U      // Register Y
-    var SP: UByte = 0x00U  // Stack pointer
-    var PC: UShort = 0x0000U // Program counter
-    var status: UByte = 0x00U // Status register (current flag)
+    private var A: UByte = 0x00U      // Accumulator
+    private var X: UByte = 0x00U      // Register X
+    private var Y: UByte = 0x00U      // Register Y
+    private var SP: UByte = 0x00U  // Stack pointer
+    private var PC: UShort = 0x0000U // Program counter
+    private var status: UByte = 0x00U // Status register (current flag)
 
     //    Flags
-    var flagC : Boolean = false  // Carry Bit
-    var flagZ : Boolean = false  // Zero
-    var flagI : Boolean = false  // Disable Interrupts
-    var flagD : Boolean = false  // DecimalMode
-    var flagB : Boolean = false  // Break
-    var flagU : Boolean = true   // Unused
-    var flagV : Boolean = false  // Overflow
-    var flagN : Boolean = false  // Negative
 
-    var flagShiftC : UByte = (1U shl 0).toUByte()
-    var flagShiftZ : UByte = (1U shl 1).toUByte()
-    var flagShiftI : UByte = (1U shl 2).toUByte()
-    var flagShiftD : UByte = (1U shl 3).toUByte()
-    var flagShiftB : UByte = (1U shl 4).toUByte()
-    var flagShiftU : UByte = (1U shl 5).toUByte()
-    var flagShiftV : UByte = (1U shl 6).toUByte()
-    var flagShiftN : UByte = (1U shl 7).toUByte()
+    private var flagShiftC : UByte = (1U shl 0).toUByte()
+    private var flagShiftZ : UByte = (1U shl 1).toUByte()
+    private var flagShiftI : UByte = (1U shl 2).toUByte()
+    private var flagShiftD : UByte = (1U shl 3).toUByte()
+    private var flagShiftB : UByte = (1U shl 4).toUByte()
+    private var flagShiftU : UByte = (1U shl 5).toUByte()
+    private var flagShiftV : UByte = (1U shl 6).toUByte()
+    private var flagShiftN : UByte = (1U shl 7).toUByte()
 
     private fun setFlag(flagShift : UByte, flagVal : Boolean) {
         status = if (flagVal) {
@@ -45,13 +35,13 @@ class CPU() {
 
 //    Functions / Other Pins
 
-    var fetched : UByte = 0x00U
+    private var fetched : UByte = 0x00U
 
-    var absoluteAddress : UShort = 0x0000U
-    var relativeAddress : UShort = 0x0000U
-    var opcode : UByte = 0x00U
-    var cycles : Int = 0
-    var temp : UShort = 0U
+    private var absoluteAddress : UShort = 0x0000U
+    private var relativeAddress : UShort = 0x0000U
+    private var opcode : UByte = 0x00U
+    private var cycles : Int = 0
+    private var temp : UShort = 0U
 
     private fun clock() {
         if (cycles == 0) {
