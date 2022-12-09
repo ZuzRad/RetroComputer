@@ -2,26 +2,27 @@ package com.example.retrocomputer.emulator
 
 class CPU(private val bus: Bus) {
 
+
     //    Registers
-    private var A: UByte = 0x00U      // Accumulator
-    private var X: UByte = 0x00U      // Register X
-    private var Y: UByte = 0x00U      // Register Y
-    private var SP: UByte = 0x00U  // Stack pointer
-    private var PC: UShort = 0x0000U // Program counter
-    private var status: UByte = 0x00U // Status register (current flag)
+    var A: Int = 0x00      // Accumulator
+    var X: Int = 0x00      // Register X
+    var Y: Int = 0x00      // Register Y
+    var SP: Int = 0x00  // Stack pointer
+    var PC: Int = 0x0000 // Program counter
+    var status: Int = 0x00 // Status register (current flag)
 
     //    Flags
 
-    private var flagShiftC : UByte = (1U shl 0).toUByte()
-    private var flagShiftZ : UByte = (1U shl 1).toUByte()
-    private var flagShiftI : UByte = (1U shl 2).toUByte()
-    private var flagShiftD : UByte = (1U shl 3).toUByte()
-    private var flagShiftB : UByte = (1U shl 4).toUByte()
-    private var flagShiftU : UByte = (1U shl 5).toUByte()
-    private var flagShiftV : UByte = (1U shl 6).toUByte()
-    private var flagShiftN : UByte = (1U shl 7).toUByte()
+    var flagShiftC : Int = (1 shl 0)
+    var flagShiftZ : Int = (1 shl 1)
+    var flagShiftI : Int = (1 shl 2)
+    var flagShiftD : Int = (1 shl 3)
+    var flagShiftB : Int = (1 shl 4)
+    var flagShiftU : Int = (1 shl 5)
+    var flagShiftV : Int = (1 shl 6)
+    var flagShiftN : Int = (1 shl 7)
 
-    private fun setFlag(flagShift : UByte, flagVal : Boolean) {
+    private fun setFlag(flagShift : Int, flagVal : Boolean) {
         status = if (flagVal) {
             status or flagShift
         } else {
@@ -29,19 +30,19 @@ class CPU(private val bus: Bus) {
         }
     }
 
-    private fun getFlag(flagShift : UByte) : UByte {
-        return (if ((status and flagShift) > 0u) 1U else 0U)
+    private fun getFlag(flagShift : Int) : Int {
+        return (if ((status and flagShift) > 0) 1 else 0)
     }
 
 //    Functions / Other Pins
 
-    private var fetched : UByte = 0x00U
+    var fetched : Int = 0x00
 
-    private var absoluteAddress : UShort = 0x0000U
-    private var relativeAddress : UShort = 0x0000U
-    private var opcode : UByte = 0x00U
-    private var cycles : Int = 0
-    private var temp : UShort = 0U
+    var absoluteAddress : Int = 0x0000
+    var relativeAddress : Int = 0x0000
+    var opcode : Int = 0x00
+    var cycles : Int = 0
+    var temp : Int = 0
 
     private fun clock() {
         if (cycles == 0) {
@@ -49,78 +50,78 @@ class CPU(private val bus: Bus) {
             setFlag(flagShiftU, true)
             PC++
 
-            cycles = lookup[opcode.toInt()].cycles
-            val additional_cycle1 : UByte = handleAddressingMode(lookup[opcode.toInt()].mode)
-            val additional_cycle2 : UByte = handleOpcodes(lookup[opcode.toInt()].opcode)
-            cycles += (additional_cycle1 and additional_cycle2).toInt()
+            cycles = lookup[opcode].cycles
+            val additional_cycle1 : Int = handleAddressingMode(lookup[opcode].mode)
+            val additional_cycle2 : Int = handleOpcodes(lookup[opcode].opcode)
+            cycles += (additional_cycle1 and additional_cycle2)
             setFlag(flagShiftU, true)
         }
         cycles--
     }
 
     private fun reset() {
-        absoluteAddress = 0xFFFCU
-        val lo : UInt = bus.read((absoluteAddress + 0U).toUShort()).toUInt()
-        val hi : UInt = bus.read((absoluteAddress + 1U).toUShort()).toUInt()
+        absoluteAddress = 0xFFFC
+        val lo : Int = bus.read((absoluteAddress + 0))
+        val hi : Int = bus.read((absoluteAddress + 1))
 
-        PC = ((hi shl 8) or lo).toUShort()
+        PC = ((hi shl 8) or lo)
 
-        var A: UByte = 0x00U
-        var X: UByte = 0x00U
-        var Y: UByte = 0x00U
-        var SP: UByte = 0xFDU
-        var status: UByte = ((0x00U).toUByte() or flagShiftU)
+        A = 0x00
+        X = 0x00
+        Y = 0x00
+        SP = 0xFD
+        status = ((0x00) or flagShiftU)
 
-        relativeAddress = 0x0000U
-        absoluteAddress = 0x0000U
-        fetched = 0x00U
+        relativeAddress = 0x0000
+        absoluteAddress = 0x0000
+        fetched = 0x00
 
         cycles = 8
     }
 
     private fun irq() {     // Interrupt Request
-        if (getFlag(flagShiftI) == (0U).toUByte()) {
-            bus.write((0x0100U + SP).toUShort(), (PC.toUInt() shr 8).toUByte() and 0x00FFU)
+        if (getFlag(flagShiftI) == (0)) {
+            bus.write((0x0100 + SP), (PC shr 8) and 0x00FF)
             SP--
-            bus.write((0x0100U + SP).toUShort(), PC.toUByte() and 0x00FFU)
+            bus.write((0x0100 + SP), PC and 0x00FF)
             SP--
 
             setFlag(flagShiftB, false)
             setFlag(flagShiftU, true)
             setFlag(flagShiftI, true)
-            bus.write((0x0100U + SP).toUShort(), status)
+            bus.write((0x0100 + SP), status)
             SP--
 
-            absoluteAddress = 0xFFFEU
-            val lo : UInt = bus.read((absoluteAddress + 0U).toUShort()).toUInt()
-            val hi : UInt = bus.read((absoluteAddress + 1U).toUShort()).toUInt()
-            PC = ((hi shl 8) or lo).toUShort()
+            absoluteAddress = 0xFFFE
+            val lo : Int = bus.read((absoluteAddress + 0))
+            val hi : Int = bus.read((absoluteAddress + 1))
+            PC = ((hi shl 8) or lo)
 
             cycles = 7
         }
     }
     private fun nmi() {     // Non-Maskable Interrupt
-        bus.write((0x0100U + SP).toUShort(), (PC.toUInt() shr 8).toUByte() and 0x00FFU)
+        bus.write((0x0100 + SP), (PC shr 8) and 0x00FF)
         SP--
-        bus.write((0x0100U + SP).toUShort(), PC.toUByte() and 0x00FFU)
+        bus.write((0x0100 + SP), PC and 0x00FF)
         SP--
 
         setFlag(flagShiftB, false)
         setFlag(flagShiftU, true)
         setFlag(flagShiftI, true)
-        bus.write((0x0100U + SP).toUShort(), status)
+        bus.write((0x0100 + SP), status)
         SP--
 
-        absoluteAddress = 0xFFFAU
-        val lo : UInt = bus.read((absoluteAddress + 0U).toUShort()).toUInt()
-        val hi : UInt = bus.read((absoluteAddress + 1U).toUShort()).toUInt()
-        PC = ((hi shl 8) or lo).toUShort()
+        absoluteAddress = 0xFFFA
+        val lo : Int = bus.read((absoluteAddress + 0))
+        val hi : Int = bus.read((absoluteAddress + 1))
+        PC = ((hi shl 8) or lo)
 
         cycles = 8
     }
 
-    private fun fetch () : UByte {
-        if((lookup[opcode.toInt()].mode) != AddressingMode.IMP)
+    private fun fetch () : Int {
+        if((lookup[opcode].mode) != AddressingMode.IMP)
             fetched = bus.read(absoluteAddress)
         return fetched
     }
@@ -142,7 +143,7 @@ class CPU(private val bus: Bus) {
         IZY, // Post-indexed indirect
     }
 
-    private fun handleAddressingMode(addrMode: AddressingMode): UByte {
+    private fun handleAddressingMode(addrMode: AddressingMode): Int {
         return when(addrMode) {
             AddressingMode.IMM -> IMM()
             AddressingMode.IMP -> IMP()
@@ -159,122 +160,122 @@ class CPU(private val bus: Bus) {
         }
     }
 
-    private fun IMM() : UByte {
+    private fun IMM() : Int {
         absoluteAddress = PC++
-        return 0U
+        return 0
     }
-    private fun IMP() : UByte {
+    private fun IMP() : Int {
         fetched = A
-        return 0U
+        return 0
     }
-    private fun ZP0() : UByte {
-        absoluteAddress = bus.read(PC).toUShort()
+    private fun ZP0() : Int {
+        absoluteAddress = bus.read(PC)
         PC++
-        absoluteAddress = absoluteAddress and 0x00FFU
-        return 0U
+        absoluteAddress = absoluteAddress and 0x00FF
+        return 0
     }
-    private fun ZPX() : UByte {
-        absoluteAddress = (bus.read(PC) + X).toUShort()
+    private fun ZPX() : Int {
+        absoluteAddress = (bus.read(PC) + X)
         PC++
-        absoluteAddress = absoluteAddress and 0x00FFU
-        return 0U
+        absoluteAddress = absoluteAddress and 0x00FF
+        return 0
     }
-    private fun ZPY() : UByte {
-        absoluteAddress = (bus.read(PC) + Y).toUShort()
+    private fun ZPY() : Int {
+        absoluteAddress = (bus.read(PC) + Y)
         PC++
-        absoluteAddress = absoluteAddress and 0x00FFU
-        return 0U
+        absoluteAddress = absoluteAddress and 0x00FF
+        return 0
     }
-    private fun REL() : UByte {
-        relativeAddress = bus.read(PC).toUShort()
+    private fun REL() : Int {
+        relativeAddress = bus.read(PC)
         PC++
-        if ((relativeAddress and 0x80U) > 0U) {
-            relativeAddress = relativeAddress or 0xFF00U
+        if ((relativeAddress and 0x80) > 0) {
+            relativeAddress = relativeAddress or 0xFF00
         }
-        return 0U
+        return 0
     }
-    private fun ABS() : UByte {
-        val lo : UInt = bus.read(PC).toUInt()
+    private fun ABS() : Int {
+        val lo : Int = bus.read(PC)
         PC++
-        val hi : UInt = bus.read(PC).toUInt()
+        val hi : Int = bus.read(PC)
         PC++
 
-        absoluteAddress = ((hi shl 8) or lo).toUShort()
+        absoluteAddress = ((hi shl 8) or lo)
 
-        return 0U
+        return 0
     }
-    private fun ABX() : UByte {
-        val lo : UInt = bus.read(PC).toUInt()
+    private fun ABX() : Int {
+        val lo : Int = bus.read(PC)
         PC++
-        val hi : UInt = bus.read(PC).toUInt()
+        val hi : Int = bus.read(PC)
         PC++
 
-        absoluteAddress = ((hi shl 8) or lo).toUShort()
-        absoluteAddress = (absoluteAddress + X).toUShort()
+        absoluteAddress = ((hi shl 8) or lo)
+        absoluteAddress = (absoluteAddress + X)
 
-        return if ((absoluteAddress and 0xFF00U) != (hi shl 8).toUShort()) {
-            1U
+        return if ((absoluteAddress and 0xFF00) != (hi shl 8)) {
+            1
         } else {
-            0U
+            0
         }
     }
-    private fun ABY() : UByte {
-        val lo : UInt = bus.read(PC).toUInt()
+    private fun ABY() : Int {
+        val lo : Int = bus.read(PC)
         PC++
-        val hi : UInt = bus.read(PC).toUInt()
+        val hi : Int = bus.read(PC)
         PC++
 
-        absoluteAddress = ((hi shl 8) or lo).toUShort()
-        absoluteAddress = (absoluteAddress + Y).toUShort()
+        absoluteAddress = ((hi shl 8) or lo)
+        absoluteAddress = (absoluteAddress + Y)
 
-        return if ((absoluteAddress and 0xFF00U) != (hi shl 8).toUShort()) {
-            1U
+        return if ((absoluteAddress and 0xFF00) != (hi shl 8)) {
+            1
         } else {
-            0U
+            0
         }
-        return 0U
+        return 0
     }
-    private fun IND() : UByte {
-        val ptr_lo : UInt = bus.read(PC).toUInt()
+    private fun IND() : Int {
+        val ptr_lo : Int = bus.read(PC)
         PC++
-        val ptr_hi : UInt = bus.read(PC).toUInt()
+        val ptr_hi : Int = bus.read(PC)
         PC++
 
-        val ptr : UInt = (ptr_hi shl 8) or ptr_lo
+        val ptr : Int = (ptr_hi shl 8) or ptr_lo
 
-        if (ptr_lo == 0x00FFU) {
-            absoluteAddress = (bus.read((ptr and 0xFF00U).toUShort()).toUInt() shl 8).toUShort() or bus.read((ptr + 0U).toUShort()).toUShort()
+        if (ptr_lo == 0x00FF) {
+            absoluteAddress = (bus.read((ptr and 0xFF00)) shl 8) or bus.read((ptr + 0))
         } else {
-            absoluteAddress = (bus.read((ptr + 1U).toUShort()).toUInt() shl 8).toUShort() or bus.read((ptr + 0U).toUShort()).toUShort()
+            absoluteAddress = (bus.read((ptr + 1)) shl 8) or bus.read((ptr + 0))
         }
 
-        return 0U
+        return 0
     }
-    private fun IZX() : UByte {
-        val t: UShort = bus.read(PC).toUShort()
+    private fun IZX() : Int {
+        val t: Int = bus.read(PC)
         PC++
 
-        val lo: UInt = bus.read((t+X).toUShort() and 0x00FFU).toUInt()
-        val hi: UInt = bus.read((t+X+1U).toUShort() and 0x00FFU).toUInt()
+        val lo: Int = bus.read((t+X) and 0x00FF)
+        val hi: Int = bus.read((t+X+1) and 0x00FF)
 
-        absoluteAddress = ((hi shl 8) or lo).toUShort()
+        absoluteAddress = ((hi shl 8) or lo)
 
-        return 0U
+        return 0
     }
-    private fun IZY() : UByte {
-        val t: UShort = bus.read(PC).toUShort()
+    private fun IZY() : Int {
+        val t: Int = bus.read(PC)
         PC++
 
-        val lo: UInt = bus.read(t and 0x00FFU).toUInt()
-        val hi: UInt = bus.read((t+1U).toUShort() and 0x00FFU).toUInt()
+        val lo: Int = bus.read(t and 0x00FF)
+        val hi: Int = bus.read((t+1) and 0x00FF)
 
-        absoluteAddress = ((hi shl 8) or lo).toUShort()
-        absoluteAddress = (absoluteAddress + Y).toUShort()
+        absoluteAddress = ((hi shl 8) or lo)
+        absoluteAddress = (absoluteAddress + Y)
 
-        return if ((absoluteAddress and 0xFF00U) != (hi shl 8).toUShort()) {
-            return 1U;
+        return if ((absoluteAddress and 0xFF00) != (hi shl 8)) {
+            return 1;
         } else {
-            return 0U
+            return 0
         }
     }
 
@@ -288,7 +289,7 @@ class CPU(private val bus: Bus) {
         XXX
     }
 
-    private fun handleOpcodes(opcode: Opcode): UByte {
+    private fun handleOpcodes(opcode: Opcode): Int {
         return when(opcode) {
             Opcode.XXX -> XXX()
             Opcode.ADC -> ADC()
@@ -350,447 +351,447 @@ class CPU(private val bus: Bus) {
         }
     }
 
-    private fun XXX() : UByte {
-        return 0U
+    private fun XXX() : Int {
+        return 0
     }
-    private fun ADC() : UByte {
+    private fun ADC() : Int {
         fetch()
-        temp = (A.toUShort() + fetched.toUShort() + getFlag(flagShiftC).toUShort()).toUShort()
-        setFlag(flagShiftC, temp > 255U)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0U).toUShort())
-        setFlag(flagShiftV, (((A.toUShort() xor fetched.toUShort()).inv() and (A.toUShort() xor temp)) and 0x0080U) > 0U)
-        setFlag(flagShiftN, (temp and 0x80U) > 0U)
-        A = (temp and 0x00FFU).toUByte()
-        return 1U
+        temp = (A + fetched + getFlag(flagShiftC))
+        setFlag(flagShiftC, temp > 255)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0))
+        setFlag(flagShiftV, (((A xor fetched).inv() and (A xor temp)) and 0x0080) > 0)
+        setFlag(flagShiftN, (temp and 0x80) > 0)
+        A = (temp and 0x00FF)
+        return 1
     }
-    private fun AND() : UByte {
+    private fun AND() : Int {
         fetch()
         A = A and fetched
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 1
     }
-    private fun ASL() : UByte {
+    private fun ASL() : Int {
         fetch()
-        temp = (fetched.toUInt() shl 1).toUShort()
-        setFlag(flagShiftC, (temp and 0xFF00U) > 0U)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
-        setFlag(flagShiftN, (temp and 0x80U) > 0U)
-        if (lookup[opcode.toInt()].mode == AddressingMode.IMP)
-            A = (temp and 0x00FFU).toUByte()
+        temp = (fetched shl 1)
+        setFlag(flagShiftC, (temp and 0xFF00) > 0)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x00))
+        setFlag(flagShiftN, (temp and 0x80) > 0)
+        if (lookup[opcode].mode == AddressingMode.IMP)
+            A = (temp and 0x00FF)
         else
-            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
-        return 0U
+            bus.write(absoluteAddress, (temp and 0x00FF))
+        return 0
     }
-    private fun BIT() : UByte {
+    private fun BIT() : Int {
         fetch()
-        temp = (A and fetched).toUShort()
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
-        setFlag(flagShiftN, (fetched and (1U shl 7).toUByte()) > 0U)
-        setFlag(flagShiftV, (fetched and (1U shl 6).toUByte()) > 0U)
-        return 0U
+        temp = (A and fetched)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x00))
+        setFlag(flagShiftN, (fetched and (1 shl 7)) > 0)
+        setFlag(flagShiftV, (fetched and (1 shl 6)) > 0)
+        return 0
     }
-    private fun BPL() : UByte {
-        if (getFlag(flagShiftN) == (0U).toUByte()) {
+     private fun BPL() : Int {
+        if (getFlag(flagShiftN) == (0)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BMI() : UByte {
-        if (getFlag(flagShiftN) == (1U).toUByte()) {
+    private fun BMI() : Int {
+        if (getFlag(flagShiftN) == (1)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BVC() : UByte {
-        if (getFlag(flagShiftV) == (0U).toUByte()) {
+    private fun BVC() : Int {
+        if (getFlag(flagShiftV) == (0)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BVS() : UByte {
-        if (getFlag(flagShiftV) == (1U).toUByte()) {
+    private fun BVS() : Int {
+        if (getFlag(flagShiftV) == (1)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BCC() : UByte {
-        if (getFlag(flagShiftC) == (0U).toUByte()) {
+    private fun BCC() : Int {
+        if (getFlag(flagShiftC) == (0)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BCS() : UByte {
-        if (getFlag(flagShiftC) == (1U).toUByte()) {
+    private fun BCS() : Int {
+        if (getFlag(flagShiftC) == (1)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BNE() : UByte {
-        if (getFlag(flagShiftZ) == (0U).toUByte()) {
+    private fun BNE() : Int {
+        if (getFlag(flagShiftZ) == (0)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BEQ() : UByte {
-        if (getFlag(flagShiftZ) == (1U).toUByte()) {
+    private fun BEQ() : Int {
+        if (getFlag(flagShiftZ) == (1)) {
             cycles++
-            absoluteAddress = (PC + relativeAddress).toUShort()
+            absoluteAddress = (PC + relativeAddress)
 
-            if ((absoluteAddress and 0xFF00U) != (PC and 0xFF00U))
+            if ((absoluteAddress and 0xFF00) != (PC and 0xFF00))
                 cycles++
 
-            PC = absoluteAddress
+            PC = absoluteAddress % MEMSIZE
         }
-        return 0U
+        return 0
     }
-    private fun BRK() : UByte {
+    private fun BRK() : Int {
         PC++
 
         setFlag(flagShiftI,true)
-        bus.write((0x0100U + SP).toUShort(), ((PC.toUInt() shr 8).toUByte() and 0x00FFU))
+        bus.write((0x0100 + SP), ((PC shr 8) and 0x00FF))
         SP--
-        bus.write((0x0100U + SP).toUShort(), (PC and 0x00FFU).toUByte())
+        bus.write((0x0100 + SP), (PC and 0x00FF))
         SP--
 
         setFlag(flagShiftB,true)
-        bus.write((0x0100U + SP).toUShort(), status)
+        bus.write((0x0100 + SP), status)
         SP--
         setFlag(flagShiftB,false)
 
-        PC = (bus.read(0xFFFEU)).toUShort() or (bus.read(0xFFFFU).toUInt() shl 8).toUShort()
-        return 0U
+        PC = (bus.read(0xFFFE)) or (bus.read(0xFFFF) shl 8)
+        return 0
     }
-    private fun CMP() : UByte {
+    private fun CMP() : Int {
         fetch()
-        temp = (A.toUShort() - fetched.toUShort()).toUShort()
+        temp = (A - fetched)
         setFlag(flagShiftC, A >= fetched)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        return 1
     }
-    private fun CPX() : UByte {
+    private fun CPX() : Int {
         fetch()
-        temp = (X.toUShort() - fetched.toUShort()).toUShort()
+        temp = (X - fetched)
         setFlag(flagShiftC, X >= fetched)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U)>0U)
-        return 0U
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080)>0)
+        return 0
     }
-    private fun CPY() : UByte {
+    private fun CPY() : Int {
         fetch()
-        temp = (Y.toUShort() - fetched.toUShort()).toUShort()
+        temp = (Y - fetched)
         setFlag(flagShiftC, Y >= fetched)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        return 0
     }
-    private fun DEC() : UByte {
+    private fun DEC() : Int {
         fetch()
-        temp = (fetched - 1U).toUShort()
-        bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        return 0U
+        temp = (fetched - 1)
+        bus.write(absoluteAddress, (temp and 0x00FF))
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        return 0
     }
-    private fun EOR() : UByte {
+    private fun EOR() : Int {
         fetch()
         A = A xor fetched
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 1
     }
-    private fun CLC() : UByte {
+    private fun CLC() : Int {
         setFlag(flagShiftC, false)
-        return 0U
+        return 0
     }
-    private fun SEC() : UByte {
+    private fun SEC() : Int {
         setFlag(flagShiftC, true)
-        return 0U
+        return 0
     }
-    private fun CLI() : UByte {
+    private fun CLI() : Int {
         setFlag(flagShiftI, false)
-        return 0U
+        return 0
     }
-    private fun SEI() : UByte {
+    private fun SEI() : Int {
         setFlag(flagShiftI, true)
-        return 0U
+        return 0
     }
-    private fun CLV() : UByte {
+    private fun CLV() : Int {
         setFlag(flagShiftV, false)
-        return 0U
+        return 0
     }
-    private fun CLD() : UByte {
+    private fun CLD() : Int {
         setFlag(flagShiftD, false)
-        return 0U
+        return 0
     }
-    private fun SED() : UByte {
+    private fun SED() : Int {
         setFlag(flagShiftD, true)
-        return 0U
+        return 0
     }
-    private fun INC() : UByte {
+    private fun INC() : Int {
         fetch()
-        temp = (fetched + 1U).toUShort()
-        bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        return 0U
+        temp = (fetched + 1)
+        bus.write(absoluteAddress, (temp and 0x00FF))
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        return 0
     }
-    private fun JMP() : UByte {
+    private fun JMP() : Int {
         PC = absoluteAddress
-        return 0U
+        return 0
     }
-    private fun JSR() : UByte {
+    private fun JSR() : Int {
         PC--
 
-        bus.write(((0x0100U).toUByte() + SP).toUShort(), ((PC.toUInt() shr 8).toUByte() and 0x00FFU))
+        bus.write(((0x0100) + SP), ((PC shr 8) and 0x00FF))
         SP--
-        bus.write(((0x0100U).toUByte() + SP).toUShort(), (PC and 0x00FFU).toUByte())
+        bus.write(((0x0100) + SP), (PC and 0x00FF))
         SP--
 
         PC = absoluteAddress
-        return 0U
+        return 0
     }
-    private fun LDA() : UByte {
+    private fun LDA() : Int {
         fetch()
         A=fetched
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 1
     }
-    private fun LDX() : UByte {
+    private fun LDX() : Int {
         fetch()
         X=fetched
-        setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and 0x80U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftN, (X and 0x80) > 0)
+        return 1
     }
-    private fun LDY() : UByte {
+    private fun LDY() : Int {
         fetch()
         Y=fetched
-        setFlag(flagShiftZ, Y == (0x00U).toUByte())
-        setFlag(flagShiftN, (Y and 0x80U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftN, (Y and 0x80) > 0)
+        return 1
     }
-    private fun LSR() : UByte {
+    private fun LSR() : Int {
         fetch();
-        setFlag(flagShiftC, (fetched and 0x0001U) > 0U)
-        temp = (fetched.toUInt() shr 1).toUShort()
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
-            A = (temp and 0x00FFU).toUByte()
+        setFlag(flagShiftC, (fetched and 0x0001) > 0)
+        temp = (fetched shr 1)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        if(lookup[opcode].mode == AddressingMode.IMP)
+            A = (temp and 0x00FF)
         else
-            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
-        return 0U;
+            bus.write(absoluteAddress, (temp and 0x00FF))
+        return 0;
     }
-    private fun NOP() : UByte {
+    private fun NOP() : Int {
         when (opcode) {
-            (0x1CU).toUByte(), (0x3CU).toUByte(), (0x5CU).toUByte(), (0x7CU).toUByte(), (0xDCU).toUByte(), (0xFCU).toUByte() -> return 1U
+            (0x1C), (0x3C), (0x5C), (0x7C), (0xDC), (0xFC) -> return 1
         }
-        return 0U
+        return 0
     }
-     private fun ORA() : UByte {
+    private fun ORA() : Int {
         fetch()
         A = A or fetched
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 1U
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 1
     }
-    private fun TAX() : UByte {
+    private fun TAX() : Int {
         X = A
-        setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and 0x80U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftN, (X and 0x80) > 0)
+        return 0
     }
-    private fun TXA() : UByte {
+    private fun TXA() : Int {
         A = X
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 0
     }
-    private fun DEX() : UByte {
+    private fun DEX() : Int {
         X--
-        setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and (0x80U)) > 0U)
-        return 0U
+        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftN, (X and (0x80)) > 0)
+        return 0
     }
-    private fun INX() : UByte {
+    private fun INX() : Int {
         X++
-        setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and 0x80U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftN, (X and 0x80) > 0)
+        return 0
     }
-    private fun TAY() : UByte {
+    private fun TAY() : Int {
         Y = A
-        setFlag(flagShiftZ, Y == (0x00U).toUByte())
-        setFlag(flagShiftN, (Y and 0x80U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftN, (Y and 0x80) > 0)
+        return 0
     }
-    private fun TYA() : UByte {
+    private fun TYA() : Int {
         A = Y
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 0
     }
-    private fun DEY() : UByte {
+    private fun DEY() : Int {
         Y--
-        setFlag(flagShiftZ, Y == (0x00U).toUByte())
-        setFlag(flagShiftN, (Y and (0x80U)) > 0U)
-        return 0U
+        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftN, (Y and (0x80)) > 0)
+        return 0
     }
-    private fun INY() : UByte {
+    private fun INY() : Int {
         Y++
-        setFlag(flagShiftZ, Y == (0x00U).toUByte())
-        setFlag(flagShiftN, (Y and 0x80U) > 0U)
-        return 0U
+        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftN, (Y and 0x80) > 0)
+        return 0
     }
-    private fun ROR() : UByte {
+    private fun ROR() : Int {
         fetch()
-        temp = (getFlag(flagShiftC).toUInt() shl 7).toUShort() or (fetched.toUInt() shr 1).toUShort()
-        setFlag(flagShiftC, (fetched and 0x01U) > 0U)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x00U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
-            A = (temp and 0x00FFU).toUByte()
+        temp = (getFlag(flagShiftC) shl 7) or (fetched shr 1)
+        setFlag(flagShiftC, (fetched and 0x01) > 0)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x00))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        if(lookup[opcode].mode == AddressingMode.IMP)
+            A = (temp and 0x00FF)
         else
-            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
-        return 0U
+            bus.write(absoluteAddress, (temp and 0x00FF))
+        return 0
     }
-    private fun ROL() : UByte {
+    private fun ROL() : Int {
         fetch()
-        temp = (fetched.toUInt() shl 1).toUShort() or (getFlag(flagShiftC)).toUShort()
-        setFlag(flagShiftC, (temp and 0xFF00U) > 0U)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0x0000U).toUShort())
-        setFlag(flagShiftN, (temp and 0x0080U) > 0U)
-        if(lookup[opcode.toInt()].mode == AddressingMode.IMP)
-            A = (temp and 0x00FFU).toUByte()
+        temp = (fetched shl 1) or (getFlag(flagShiftC))
+        setFlag(flagShiftC, (temp and 0xFF00) > 0)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
+        if(lookup[opcode].mode == AddressingMode.IMP)
+            A = (temp and 0x00FF)
         else
-            bus.write(absoluteAddress, (temp and 0x00FFU).toUByte())
-        return 0U
+            bus.write(absoluteAddress, (temp and 0x00FF))
+        return 0
     }
-    private fun RTI() : UByte {
+    private fun RTI() : Int {
         SP++
-        status = bus.read((0x0100U + SP).toUShort())
+        status = bus.read((0x0100 + SP))
         status = status and flagShiftB.inv()
         status = status and flagShiftU.inv()
 
         SP++
-        PC = bus.read((0x0100U + SP).toUShort()).toUShort()
+        PC = bus.read((0x0100 + SP))
         SP++
-        PC = PC or ((bus.read((0x0100U + SP).toUShort()).toUShort()).toUInt() shl 8).toUShort()
-        return 0U
+        PC = PC or ((bus.read((0x0100 + SP))) shl 8)
+        return 0
     }
-    private fun RTS() : UByte {
+    private fun RTS() : Int {
         SP++
-        PC = (bus.read((0x0100U + SP).toUShort()).toUShort())
+        PC = (bus.read((0x0100 + SP)))
         SP++
-        PC = PC or (bus.read((0x0100U + SP).toUShort()).toUInt() shl 8).toUShort()
+        PC = PC or (bus.read((0x0100 + SP)) shl 8)
 
         PC++
-        return 0U
+        return 0
     }
-    private fun SBC() : UByte {
+    private fun SBC() : Int {
         fetch()
-        val value : UShort = fetched.toUShort() xor 0x00FFU
+        val value : Int = fetched xor 0x00FF
 
-        temp = (A.toUShort() + value + getFlag(flagShiftC).toUShort()).toUShort()
-        setFlag(flagShiftC, (temp and 0xFF00U) > 0U)
-        setFlag(flagShiftZ, (temp and 0x00FFU) == (0U).toUShort())
-        setFlag(flagShiftV, ((temp xor A.toUShort()) and (temp xor value) and 0x0080U) > 0U)
-        setFlag(flagShiftN, (temp and 0x80U) > 0U)
-        A = (temp and 0x00FFU).toUByte()
-        return 1U
+        temp = (A + value + getFlag(flagShiftC))
+        setFlag(flagShiftC, (temp and 0xFF00) > 0)
+        setFlag(flagShiftZ, (temp and 0x00FF) == (0))
+        setFlag(flagShiftV, ((temp xor A) and (temp xor value) and 0x0080) > 0)
+        setFlag(flagShiftN, (temp and 0x80) > 0)
+        A = (temp and 0x00FF)
+        return 1
     }
-    private fun STA() : UByte {
+    private fun STA() : Int {
         bus.write(absoluteAddress, A)
-        return 0U
+        return 0
     }
-    private fun TXS() : UByte {
+    private fun TXS() : Int {
         SP = X
-        return 0U
+        return 0
     }
-    private fun TSX() : UByte {
+    private fun TSX() : Int {
         X = SP
-        setFlag(flagShiftZ, X == (0x00U).toUByte())
-        setFlag(flagShiftN, (X and 0x80U)>0U)
-        return 0U
+        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftN, (X and 0x80)>0)
+        return 0
 
     }
-    private fun PHA() : UByte {
-        bus.write((0x0100U + SP).toUShort(), A)
+    private fun PHA() : Int {
+        bus.write((0x0100 + SP), A)
         SP--
-        return 0U
+        return 0
     }
-    private fun PLA() : UByte {
+    private fun PLA() : Int {
         SP++
-        A = bus.read((0x0100U + SP).toUShort())
-        setFlag(flagShiftZ, A == (0x00U).toUByte())
-        setFlag(flagShiftN, (A and 0x80U) > 0U)
-        return 0U
+        A = bus.read((0x0100 + SP))
+        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftN, (A and 0x80) > 0)
+        return 0
     }
-    private fun PHP() : UByte {
-        bus.write((0x0100U + SP).toUShort(), status or flagShiftB or flagShiftU)
+    private fun PHP() : Int {
+        bus.write((0x0100 + SP), status or flagShiftB or flagShiftU)
         setFlag(flagShiftB, false)
         setFlag(flagShiftU, false)
         SP--
-        return 0U
+        return 0
     }
-    private fun PLP() : UByte {
+    private fun PLP() : Int {
         SP++
-        status = bus.read((0x0100U + SP).toUShort())
+        status = bus.read((0x0100 + SP))
         setFlag(flagShiftU, true)
-        return 0U
+        return 0
     }
-    private fun STX() : UByte {
+    private fun STX() : Int {
         bus.write(absoluteAddress, X)
-        return 0U
+        return 0
     }
-    private fun STY() : UByte {
+    private fun STY() : Int {
         bus.write(absoluteAddress, Y)
-        return 0U
+        return 0
     }
 
     data class Instruction (
