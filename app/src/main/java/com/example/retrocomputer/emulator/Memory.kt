@@ -1,4 +1,4 @@
-package com.example.retrocomputer.emulator
+package com.example.retrocomputer
 
 class Memory {
     val ram = IntArray(65536)
@@ -13,12 +13,6 @@ class Memory {
     fun write(addr: Int, value: Int) {
         if (addr in 0x0000..0xFFFF) {
             ram[addr and 0xFFFF] = value
-        }
-    }
-
-    init {
-        ram.forEach { _ ->
-            0x00
         }
     }
 }

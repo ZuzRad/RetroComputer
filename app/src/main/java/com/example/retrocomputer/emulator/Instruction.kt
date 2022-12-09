@@ -1,4 +1,4 @@
-package com.example.retrocomputer.emulator
+package com.example.retrocomputer
 
 data class Instruction (
     val name: String,

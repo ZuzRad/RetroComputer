@@ -1,29 +1,29 @@
-package com.example.retrocomputer.emulator
+package com.example.retrocomputer
 
-open class CPU {
+import java.io.File
 
-    protected val memory = Memory()
+open class CPU(val memory: Memory = Memory()) {
 
     //    Registers
-    private var A: Int = 0x00      // Accumulator
-    private var X: Int = 0x00      // Register X
-    private var Y: Int = 0x00      // Register Y
-    private var SP: Int = 0x00  // Stack pointer
-    private var PC: Int = 0x0000 // Program counter
-    private var status: Int = 0x00 // Status register (current flag)
+    var A: Int = 0x00      // Accumulator
+    var X: Int = 0x00      // Register X
+    var Y: Int = 0x00      // Register Y
+    var SP: Int = 0x00  // Stack pointer
+    var PC: Int = 0x0000 // Program counter
+    var status: Int = 0x00 // Status register (current flag)
 
     //    Flags
 
-    private var flagShiftC : Int = (1 shl 0)
-    private var flagShiftZ : Int = (1 shl 1)
-    private var flagShiftI : Int = (1 shl 2)
-    private var flagShiftD : Int = (1 shl 3)
-    private var flagShiftB : Int = (1 shl 4)
-    private var flagShiftU : Int = (1 shl 5)
-    private var flagShiftV : Int = (1 shl 6)
-    private var flagShiftN : Int = (1 shl 7)
+    var flagShiftC : Int = (1 shl 0)
+    var flagShiftZ : Int = (1 shl 1)
+    var flagShiftI : Int = (1 shl 2)
+    var flagShiftD : Int = (1 shl 3)
+    var flagShiftB : Int = (1 shl 4)
+    var flagShiftU : Int = (1 shl 5)
+    var flagShiftV : Int = (1 shl 6)
+    var flagShiftN : Int = (1 shl 7)
 
-    private fun setFlag(flagShift : Int, flagVal : Boolean) {
+    fun setFlag(flagShift : Int, flagVal : Boolean) {
         status = if (flagVal) {
             status or flagShift
         } else {
@@ -31,21 +31,22 @@ open class CPU {
         }
     }
 
-    private fun getFlag(flagShift : Int) : Int {
+    fun getFlag(flagShift : Int) : Int {
         return (if ((status and flagShift) > 0) 1 else 0)
     }
 
 //    Functions / Other Pins
 
-    private var fetched : Int = 0x00
+    var fetched : Int = 0x00
 
-    private var absoluteAddress : Int = 0x0000
-    private var relativeAddress : Int = 0x0000
-    private var opcode : Int = 0x00
-    protected var cycles : Int = 0
-    private var temp : Int = 0
+    var absoluteAddress : Int = 0x0000
+    var relativeAddress : Int = 0x0000
+    var opcode : Int = 0x00
+    var temp : Int = 0
 
-    protected fun clock() {
+    var cycles : Int = 0
+
+    fun clock() {
         if (cycles == 0) {
             opcode = memory.read(PC)
             setFlag(flagShiftU, true)
@@ -60,10 +61,10 @@ open class CPU {
         cycles--
     }
 
-    private fun reset() {
+    fun reset() {
         absoluteAddress = 0xFFFC
-        val lo : Int = memory.read((absoluteAddress + 0))
-        val hi : Int = memory.read((absoluteAddress + 1))
+        val lo : Int = memory.read(absoluteAddress)
+        val hi : Int = memory.read(absoluteAddress + 1)
 
         PC = ((hi shl 8) or lo)
 
@@ -71,16 +72,15 @@ open class CPU {
         X = 0x00
         Y = 0x00
         SP = 0xFD
-        status = ((0x00) or flagShiftU)
+        status = (0x00 or flagShiftU)
 
         relativeAddress = 0x0000
         absoluteAddress = 0x0000
         fetched = 0x00
-
         cycles = 8
     }
 
-    private fun irq() {     // Interrupt Request
+    fun irq() {     // Interrupt Request
         if (getFlag(flagShiftI) == (0)) {
             memory.write((0x0100 + SP), (PC shr 8) and 0x00FF)
             SP--
@@ -101,7 +101,7 @@ open class CPU {
             cycles = 7
         }
     }
-    private fun nmi() {     // Non-Maskable Interrupt
+    fun nmi() {     // Non-Maskable Interrupt
         memory.write((0x0100 + SP), (PC shr 8) and 0x00FF)
         SP--
         memory.write((0x0100 + SP), PC and 0x00FF)
@@ -121,7 +121,7 @@ open class CPU {
         cycles = 8
     }
 
-    private fun fetch () : Int {
+    fun fetch () : Int {
         if((lookup[opcode].mode) != AddressingMode.IMP)
             fetched = memory.read(absoluteAddress)
         return fetched
@@ -129,7 +129,7 @@ open class CPU {
 
 //    Addressing modes
 
-    private fun handleAddressingMode(addrMode: AddressingMode): Int {
+    fun handleAddressingMode(addrMode: AddressingMode): Int {
         return when(addrMode) {
             AddressingMode.IMM -> IMM()
             AddressingMode.IMP -> IMP()
@@ -146,33 +146,33 @@ open class CPU {
         }
     }
 
-    private fun IMM() : Int {
+    fun IMM() : Int {
         absoluteAddress = PC++
         return 0
     }
-    private fun IMP() : Int {
+    fun IMP() : Int {
         fetched = A
         return 0
     }
-    private fun ZP0() : Int {
+    fun ZP0() : Int {
         absoluteAddress = memory.read(PC)
         PC++
         absoluteAddress = absoluteAddress and 0x00FF
         return 0
     }
-    private fun ZPX() : Int {
+    fun ZPX() : Int {
         absoluteAddress = (memory.read(PC) + X)
         PC++
         absoluteAddress = absoluteAddress and 0x00FF
         return 0
     }
-    private fun ZPY() : Int {
+    fun ZPY() : Int {
         absoluteAddress = (memory.read(PC) + Y)
         PC++
         absoluteAddress = absoluteAddress and 0x00FF
         return 0
     }
-    private fun REL() : Int {
+    fun REL() : Int {
         relativeAddress = memory.read(PC)
         PC++
         if ((relativeAddress and 0x80) > 0) {
@@ -180,7 +180,7 @@ open class CPU {
         }
         return 0
     }
-    private fun ABS() : Int {
+    fun ABS() : Int {
         val lo : Int = memory.read(PC)
         PC++
         val hi : Int = memory.read(PC)
@@ -190,7 +190,7 @@ open class CPU {
 
         return 0
     }
-    private fun ABX() : Int {
+    fun ABX() : Int {
         val lo : Int = memory.read(PC)
         PC++
         val hi : Int = memory.read(PC)
@@ -205,7 +205,7 @@ open class CPU {
             0
         }
     }
-    private fun ABY() : Int {
+    fun ABY() : Int {
         val lo : Int = memory.read(PC)
         PC++
         val hi : Int = memory.read(PC)
@@ -220,7 +220,7 @@ open class CPU {
             0
         }
     }
-    private fun IND() : Int {
+    fun IND() : Int {
         val ptrlo : Int = memory.read(PC)
         PC++
         val ptrhi : Int = memory.read(PC)
@@ -236,7 +236,7 @@ open class CPU {
 
         return 0
     }
-    private fun IZX() : Int {
+    fun IZX() : Int {
         val t: Int = memory.read(PC)
         PC++
 
@@ -247,7 +247,7 @@ open class CPU {
 
         return 0
     }
-    private fun IZY() : Int {
+    fun IZY() : Int {
         val t: Int = memory.read(PC)
         PC++
 
@@ -266,7 +266,7 @@ open class CPU {
 
 //    Opcodes
 
-    private fun handleOpcodes(opcode: Opcode): Int {
+    fun handleOpcodes(opcode: Opcode): Int {
         return when(opcode) {
             Opcode.XXX -> XXX()
             Opcode.ADC -> ADC()
@@ -328,10 +328,10 @@ open class CPU {
         }
     }
 
-    private fun XXX() : Int {
+    fun XXX() : Int {
         return 0
     }
-    private fun ADC() : Int {
+    fun ADC() : Int {
         fetch()
         temp = (A + fetched + getFlag(flagShiftC))
         setFlag(flagShiftC, temp > 255)
@@ -341,14 +341,14 @@ open class CPU {
         A = (temp and 0x00FF)
         return 1
     }
-    private fun AND() : Int {
+    fun AND() : Int {
         fetch()
         A = A and fetched
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
-    private fun ASL() : Int {
+    fun ASL() : Int {
         fetch()
         temp = (fetched shl 1)
         setFlag(flagShiftC, (temp and 0xFF00) > 0)
@@ -360,7 +360,7 @@ open class CPU {
             memory.write(absoluteAddress, (temp and 0x00FF))
         return 0
     }
-    private fun BIT() : Int {
+    fun BIT() : Int {
         fetch()
         temp = (A and fetched)
         setFlag(flagShiftZ, (temp and 0x00FF) == (0x00))
@@ -368,7 +368,7 @@ open class CPU {
         setFlag(flagShiftV, (fetched and (1 shl 6)) > 0)
         return 0
     }
-     private fun BPL() : Int {
+    fun BPL() : Int {
         if (getFlag(flagShiftN) == (0)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -380,7 +380,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BMI() : Int {
+    fun BMI() : Int {
         if (getFlag(flagShiftN) == (1)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -392,7 +392,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BVC() : Int {
+    fun BVC() : Int {
         if (getFlag(flagShiftV) == (0)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -404,7 +404,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BVS() : Int {
+    fun BVS() : Int {
         if (getFlag(flagShiftV) == (1)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -416,7 +416,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BCC() : Int {
+    fun BCC() : Int {
         if (getFlag(flagShiftC) == (0)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -428,7 +428,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BCS() : Int {
+    fun BCS() : Int {
         if (getFlag(flagShiftC) == (1)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -440,7 +440,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BNE() : Int {
+    fun BNE() : Int {
         if (getFlag(flagShiftZ) == (0)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -452,7 +452,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BEQ() : Int {
+    fun BEQ() : Int {
         if (getFlag(flagShiftZ) == (1)) {
             cycles++
             absoluteAddress = (PC + relativeAddress)
@@ -464,7 +464,7 @@ open class CPU {
         }
         return 0
     }
-    private fun BRK() : Int {
+    fun BRK() : Int {
         PC++
 
         setFlag(flagShiftI,true)
@@ -481,7 +481,7 @@ open class CPU {
         PC = (memory.read(0xFFFE)) or (memory.read(0xFFFF) shl 8)
         return 0
     }
-    private fun CMP() : Int {
+    fun CMP() : Int {
         fetch()
         temp = (A - fetched)
         setFlag(flagShiftC, A >= fetched)
@@ -489,7 +489,7 @@ open class CPU {
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 1
     }
-    private fun CPX() : Int {
+    fun CPX() : Int {
         fetch()
         temp = (X - fetched)
         setFlag(flagShiftC, X >= fetched)
@@ -497,7 +497,7 @@ open class CPU {
         setFlag(flagShiftN, (temp and 0x0080)>0)
         return 0
     }
-    private fun CPY() : Int {
+    fun CPY() : Int {
         fetch()
         temp = (Y - fetched)
         setFlag(flagShiftC, Y >= fetched)
@@ -505,7 +505,7 @@ open class CPU {
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
-    private fun DEC() : Int {
+    fun DEC() : Int {
         fetch()
         temp = (fetched - 1)
         memory.write(absoluteAddress, (temp and 0x00FF))
@@ -513,42 +513,42 @@ open class CPU {
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
-    private fun EOR() : Int {
+    fun EOR() : Int {
         fetch()
         A = A xor fetched
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
-    private fun CLC() : Int {
+    fun CLC() : Int {
         setFlag(flagShiftC, false)
         return 0
     }
-    private fun SEC() : Int {
+    fun SEC() : Int {
         setFlag(flagShiftC, true)
         return 0
     }
-    private fun CLI() : Int {
+    fun CLI() : Int {
         setFlag(flagShiftI, false)
         return 0
     }
-    private fun SEI() : Int {
+    fun SEI() : Int {
         setFlag(flagShiftI, true)
         return 0
     }
-    private fun CLV() : Int {
+    fun CLV() : Int {
         setFlag(flagShiftV, false)
         return 0
     }
-    private fun CLD() : Int {
+    fun CLD() : Int {
         setFlag(flagShiftD, false)
         return 0
     }
-    private fun SED() : Int {
+    fun SED() : Int {
         setFlag(flagShiftD, true)
         return 0
     }
-    private fun INC() : Int {
+    fun INC() : Int {
         fetch()
         temp = (fetched + 1)
         memory.write(absoluteAddress, (temp and 0x00FF))
@@ -556,11 +556,11 @@ open class CPU {
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
-    private fun JMP() : Int {
+    fun JMP() : Int {
         PC = absoluteAddress
         return 0
     }
-    private fun JSR() : Int {
+    fun JSR() : Int {
         PC--
 
         memory.write(((0x0100) + SP), ((PC shr 8) and 0x00FF))
@@ -571,28 +571,28 @@ open class CPU {
         PC = absoluteAddress
         return 0
     }
-    private fun LDA() : Int {
+    fun LDA() : Int {
         fetch()
         A=fetched
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
-    private fun LDX() : Int {
+    fun LDX() : Int {
         fetch()
         X=fetched
         setFlag(flagShiftZ, X == (0x00))
         setFlag(flagShiftN, (X and 0x80) > 0)
         return 1
     }
-    private fun LDY() : Int {
+    fun LDY() : Int {
         fetch()
         Y=fetched
         setFlag(flagShiftZ, Y == (0x00))
         setFlag(flagShiftN, (Y and 0x80) > 0)
         return 1
     }
-    private fun LSR() : Int {
+    fun LSR() : Int {
         fetch()
         setFlag(flagShiftC, (fetched and 0x0001) > 0)
         temp = (fetched shr 1)
@@ -604,68 +604,68 @@ open class CPU {
             memory.write(absoluteAddress, (temp and 0x00FF))
         return 0
     }
-    private fun NOP() : Int {
+    fun NOP() : Int {
         when (opcode) {
             (0x1C), (0x3C), (0x5C), (0x7C), (0xDC), (0xFC) -> return 1
         }
         return 0
     }
-    private fun ORA() : Int {
+    fun ORA() : Int {
         fetch()
         A = A or fetched
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
-    private fun TAX() : Int {
+    fun TAX() : Int {
         X = A
         setFlag(flagShiftZ, X == (0x00))
         setFlag(flagShiftN, (X and 0x80) > 0)
         return 0
     }
-    private fun TXA() : Int {
+    fun TXA() : Int {
         A = X
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 0
     }
-    private fun DEX() : Int {
+    fun DEX() : Int {
         X--
         setFlag(flagShiftZ, X == (0x00))
         setFlag(flagShiftN, (X and (0x80)) > 0)
         return 0
     }
-    private fun INX() : Int {
+    fun INX() : Int {
         X++
         setFlag(flagShiftZ, X == (0x00))
         setFlag(flagShiftN, (X and 0x80) > 0)
         return 0
     }
-    private fun TAY() : Int {
+    fun TAY() : Int {
         Y = A
         setFlag(flagShiftZ, Y == (0x00))
         setFlag(flagShiftN, (Y and 0x80) > 0)
         return 0
     }
-    private fun TYA() : Int {
+    fun TYA() : Int {
         A = Y
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 0
     }
-    private fun DEY() : Int {
+    fun DEY() : Int {
         Y--
         setFlag(flagShiftZ, Y == (0x00))
         setFlag(flagShiftN, (Y and (0x80)) > 0)
         return 0
     }
-    private fun INY() : Int {
+    fun INY() : Int {
         Y++
         setFlag(flagShiftZ, Y == (0x00))
         setFlag(flagShiftN, (Y and 0x80) > 0)
         return 0
     }
-    private fun ROR() : Int {
+    fun ROR() : Int {
         fetch()
         temp = (getFlag(flagShiftC) shl 7) or (fetched shr 1)
         setFlag(flagShiftC, (fetched and 0x01) > 0)
@@ -677,7 +677,7 @@ open class CPU {
             memory.write(absoluteAddress, (temp and 0x00FF))
         return 0
     }
-    private fun ROL() : Int {
+    fun ROL() : Int {
         fetch()
         temp = (fetched shl 1) or (getFlag(flagShiftC))
         setFlag(flagShiftC, (temp and 0xFF00) > 0)
@@ -689,7 +689,7 @@ open class CPU {
             memory.write(absoluteAddress, (temp and 0x00FF))
         return 0
     }
-    private fun RTI() : Int {
+    fun RTI() : Int {
         SP++
         status = memory.read((0x0100 + SP))
         status = status and flagShiftB.inv()
@@ -701,7 +701,7 @@ open class CPU {
         PC = PC or ((memory.read((0x0100 + SP))) shl 8)
         return 0
     }
-    private fun RTS() : Int {
+    fun RTS() : Int {
         SP++
         PC = (memory.read((0x0100 + SP)))
         SP++
@@ -710,7 +710,7 @@ open class CPU {
         PC++
         return 0
     }
-    private fun SBC() : Int {
+    fun SBC() : Int {
         fetch()
         val value : Int = fetched xor 0x00FF
 
@@ -722,56 +722,56 @@ open class CPU {
         A = (temp and 0x00FF)
         return 1
     }
-    private fun STA() : Int {
+    fun STA() : Int {
         memory.write(absoluteAddress, A)
         return 0
     }
-    private fun TXS() : Int {
+    fun TXS() : Int {
         SP = X
         return 0
     }
-    private fun TSX() : Int {
+    fun TSX() : Int {
         X = SP
         setFlag(flagShiftZ, X == (0x00))
         setFlag(flagShiftN, (X and 0x80)>0)
         return 0
 
     }
-    private fun PHA() : Int {
+    fun PHA() : Int {
         memory.write((0x0100 + SP), A)
         SP--
         return 0
     }
-    private fun PLA() : Int {
+    fun PLA() : Int {
         SP++
         A = memory.read((0x0100 + SP))
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 0
     }
-    private fun PHP() : Int {
+    fun PHP() : Int {
         memory.write((0x0100 + SP), status or flagShiftB or flagShiftU)
         setFlag(flagShiftB, false)
         setFlag(flagShiftU, false)
         SP--
         return 0
     }
-    private fun PLP() : Int {
+    fun PLP() : Int {
         SP++
         status = memory.read((0x0100 + SP))
         setFlag(flagShiftU, true)
         return 0
     }
-    private fun STX() : Int {
+    fun STX() : Int {
         memory.write(absoluteAddress, X)
         return 0
     }
-    private fun STY() : Int {
+    fun STY() : Int {
         memory.write(absoluteAddress, Y)
         return 0
     }
 
-    private var lookup = MutableList(0x100) {
+    var lookup = MutableList(0x100) {
         Instruction("???", Opcode.XXX, AddressingMode.IMP, 2)
     }
 

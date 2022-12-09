@@ -1,4 +1,4 @@
-package com.example.retrocomputer.emulator
+package com.example.retrocomputer
 
 enum class AddressingMode {
     IMM, // Immediate

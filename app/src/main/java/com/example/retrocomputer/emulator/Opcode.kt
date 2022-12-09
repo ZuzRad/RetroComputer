@@ -1,4 +1,4 @@
-package com.example.retrocomputer.emulator
+package com.example.retrocomputer
 
 enum class Opcode {
     ADC, AND, ASL, BIT, BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ, BRK, CMP,
