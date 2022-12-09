@@ -2,17 +2,10 @@ package com.example.retrocomputer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
-import android.widget.Toast
-import android.content.Intent
 import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -37,7 +30,7 @@ class MainActivity : AppCompatActivity() {
 
             when(it.itemId){
                 R.id.strona_glowna -> replaceFragment(StronaGlownaFragment(),it.title.toString())
-                R.id.emulator->replaceFragment(Emulator(),it.title.toString())
+                R.id.emulator->replaceFragment(EmulatorFragment(),it.title.toString())
 
             }
             true

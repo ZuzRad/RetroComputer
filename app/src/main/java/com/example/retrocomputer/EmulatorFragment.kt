@@ -6,32 +6,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import com.example.retrocomputer.databinding.FragmentStronaGlownaBinding
+import com.example.retrocomputer.databinding.FragmentEmulatorBinding
 
+class EmulatorFragment : Fragment() {
 
-class StronaGlownaFragment : Fragment() {
-
-    private var _binding: FragmentStronaGlownaBinding? = null
+    private var _binding: FragmentEmulatorBinding? = null
     private val binding get() = _binding!!
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        _binding = FragmentStronaGlownaBinding.inflate(inflater, container, false)
+        _binding = FragmentEmulatorBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val myButton = view.findViewById<Button>(R.id.button1)
+        val myButton = view.findViewById<Button>(R.id.butt_uruchom)
         myButton.setOnClickListener{
-            val fragment : Fragment = EmulatorFragment()
+            val fragment : Fragment = DisassemblerFragment()
             val fragmentManager = requireActivity().supportFragmentManager
             val fragmentTransaction = fragmentManager.beginTransaction()
             fragmentTransaction.replace(R.id.frameLayout, fragment)
             fragmentTransaction.addToBackStack(null)
             fragmentTransaction.commit()
-            requireActivity().title = "Emulator"
+            requireActivity().title = "Disassembler"
         }
     }
 

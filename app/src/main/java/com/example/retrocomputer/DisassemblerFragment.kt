@@ -16,7 +16,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [action.newInstance] factory method to
  * create an instance of this fragment.
  */
-class action : Fragment() {
+class DisassemblerFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
@@ -34,7 +34,7 @@ class action : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_action, container, false)
+        return inflater.inflate(R.layout.fragment_disassembler, container, false)
     }
 
     companion object {
@@ -49,7 +49,7 @@ class action : Fragment() {
         // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            action().apply {
+            DisassemblerFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
