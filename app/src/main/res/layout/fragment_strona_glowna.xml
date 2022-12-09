@@ -1,23 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/appBackground"
     tools:context=".StronaGlownaFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
         <TextView
+            android:background="@color/codeBackground"
             android:id="@+id/textView"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:layout_weight="1"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ipsum dolor sit amet consectetur adipiscing elit duis. Non blandit massa enim nec. Sit amet mauris commodo quis imperdiet massa tincidunt. Volutpat est velit egestas dui id. Cras pulvinar mattis nunc sed blandit libero volutpat. Fames ac turpis egestas sed. Quam adipiscing vitae proin sagittis nisl rhoncus mattis. Dignissim sodales ut eu sem integer vitae justo eget. Neque egestas congue quisque egestas diam in arcu. Vitae nunc sed velit dignissim sodales ut. Egestas diam in arcu cursus. Urna duis convallis convallis tellus id interdum velit laoreet id. Praesent tristique magna sit amet. Turpis egestas maecenas pharetra convallis posuere morbi leo. Nulla malesuada pellentesque elit eget gravida.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ipsum dolor sit amet consectetur adipiscing elit duis. Non blandit massa enim nec. Sit amet mauris commodo quis imperdiet massa tincidunt. Volutpat est velit egestas dui id. Cras pulvinar mattis nunc sed blandit libero volco"
+            android:textSize="15dp"
+            android:layout_margin="10dp"
+
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</FrameLayout>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.185" />
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Emulator"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

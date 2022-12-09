@@ -7,17 +7,11 @@
     <group android:checkableBehavior="single">
 
     <item
-        android:id="@+id/wczytaj_plik"
-        android:title="Wczytaj Plik"/>
+        android:id="@+id/strona_glowna"
+        android:title="Strona Główna"/>
     <item
-        android:id="@+id/pliki_testowe"
-        android:title="Pliki Testowe"/>
-    <item
-        android:id="@+id/mapa_pamięci"
-        android:title="Mapa Pamięci"/>
-    <item
-        android:id="@+id/ustawienia"
-        android:title="Ustawienia"/>
+        android:id="@+id/emulator"
+        android:title="Emulator"/>
     </group>
 
 </menu>
