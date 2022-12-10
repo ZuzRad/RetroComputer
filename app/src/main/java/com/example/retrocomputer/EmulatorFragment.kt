@@ -1,8 +1,7 @@
 package com.example.retrocomputer
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,9 +9,9 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
 import com.example.retrocomputer.databinding.FragmentEmulatorBinding
-import java.io.File
-import java.io.InputStream
+import java.io.*
 
 class EmulatorFragment : Fragment() {
 
@@ -64,18 +63,22 @@ class EmulatorFragment : Fragment() {
             ActivityResultCallback {
 
                 val uri = it
-                val path = uri?.path
-                //val text = File(path.readText())
-
-                //val text = File(path).readLines().toString()
-
-               // val input: InputStream = File(it.toString()).inputStream()
-               // var lines = input.bufferedReader().use { it.readText()}
-//                var linelist :String = ""
-//                File(it.toString()).useLines { lines -> lines.forEach { linelist+=it } }
-
-                edittext.setText(path)
-
+                try {
+                    val `in`: InputStream? = uri?.let { it1 ->
+                        context?.getContentResolver()?.openInputStream(
+                            it1
+                        )
+                    }
+                    val r = BufferedReader(InputStreamReader(`in`))
+                    val total = StringBuilder()
+                    var line: String?
+                    while (r.readLine().also { line = it } != null) {
+                        total.append(line).append('\n')
+                    }
+                    val content = total.toString()
+                    edittext.setText(content)
+                } catch (e: Exception) {
+                }
             }
         )
         val myButtonWczytaj = view.findViewById<Button>(R.id.butt_wczytaj)
