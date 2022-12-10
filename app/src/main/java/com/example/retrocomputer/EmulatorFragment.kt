@@ -1,11 +1,13 @@
 package com.example.retrocomputer
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import com.example.retrocomputer.databinding.FragmentEmulatorBinding
 
 class EmulatorFragment : Fragment() {
@@ -32,6 +34,33 @@ class EmulatorFragment : Fragment() {
             fragmentTransaction.commit()
             requireActivity().title = "Disassembler"
         }
+
+        val edittext= view.findViewById<EditText>(R.id.textView3)
+        val myButton1 = view.findViewById<Button>(R.id.butt1)
+        myButton1.setOnClickListener{
+            edittext.setText("test1")
+        }
+
+        val myButton2 = view.findViewById<Button>(R.id.butt2)
+        myButton2.setOnClickListener{
+            edittext.setText("test2")
+        }
+
+        val myButton3 = view.findViewById<Button>(R.id.butt3)
+        myButton3.setOnClickListener{
+            edittext.setText("test3")
+        }
+
+        val myButtonWczytaj = view.findViewById<Button>(R.id.butt_wczytaj)
+        myButtonWczytaj.setOnClickListener{
+            pickTxt()
+        }
+    }
+
+    private fun pickTxt(){
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.type = "application/txt"
+
     }
 
 }
