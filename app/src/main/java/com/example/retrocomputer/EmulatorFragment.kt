@@ -11,6 +11,8 @@ import android.widget.EditText
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.retrocomputer.databinding.FragmentEmulatorBinding
+import java.io.File
+import java.io.InputStream
 
 class EmulatorFragment : Fragment() {
 
@@ -57,38 +59,29 @@ class EmulatorFragment : Fragment() {
         }
 
 
+        val getTxt = registerForActivityResult(
+            ActivityResultContracts.GetContent(),
+            ActivityResultCallback {
 
+                val uri = it
+                val path = uri?.path
+                //val text = File(path.readText())
 
+                //val text = File(path).readLines().toString()
 
-//        val getTxt = registerForActivityResult(
-//            ActivityResultContracts.GetContent(),
-//            ActivityResultCallback {
-//
-//
-//            }
-//        )
-//        val myButtonWczytaj = view.findViewById<Button>(R.id.butt_wczytaj)
-//        myButtonWczytaj.setOnClickListener{
-//            getTxt.launch("image/*")
-//        }
+               // val input: InputStream = File(it.toString()).inputStream()
+               // var lines = input.bufferedReader().use { it.readText()}
+//                var linelist :String = ""
+//                File(it.toString()).useLines { lines -> lines.forEach { linelist+=it } }
+
+                edittext.setText(path)
+
+            }
+        )
+        val myButtonWczytaj = view.findViewById<Button>(R.id.butt_wczytaj)
+        myButtonWczytaj.setOnClickListener{
+            getTxt.launch("text/plain")
+        }
     }
-
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//
-//        if (requestCode == 100) {
-//            edittext.setText(data.data)
-//        }
-//    }
-
-
-
-//        val intent = Intent()
-//            .setType("application/txt")
-//            .setAction(Intent.ACTION_GET_CONTENT)
-//
-//        startActivityForResult(Intent.createChooser(intent, "Select a file"), 111)
-
-
 
 }
