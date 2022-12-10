@@ -7,7 +7,7 @@
     android:background="@color/appBackground"
     tools:context=".EmulatorFragment">
 
-    <TextView
+    <EditText
         android:id="@+id/textView3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
