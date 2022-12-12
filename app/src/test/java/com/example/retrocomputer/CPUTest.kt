@@ -31,8 +31,7 @@ class CPUTest {
         assertEquals(0, cpu.getFlag((1 shl 0))) // C
     }
 
-    @Test
-    fun test_basic() {
+    @Test fun test_basic() {
 //         A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA 8D 02 00 EA EA EA
         /*  assembled at https://www.masswerk.at/6502/assembler.html
           *=$8000
@@ -43,16 +42,15 @@ class CPUTest {
  			LDY $0000
 			LDA #$00
 			CLC
-		  loop
 		    ADC $0001
 			DEY
-			BNE loop
+			BNE $FA
 			STA $0002
 			NOP
 			NOP
 			NOP
         */
-        val rom = listOf(
+        val rom = mutableListOf(
             0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E,
             0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18,
             0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02,

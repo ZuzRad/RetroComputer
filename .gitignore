@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+test.txt
+workspace.xml
+/.idea/deploymentTargetDropDown.xml
+/app/src/main/java/com/example/retrocomputer/log.txt

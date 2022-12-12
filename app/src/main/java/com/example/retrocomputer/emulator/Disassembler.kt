@@ -1,8 +1,10 @@
 package com.example.retrocomputer
 
+import android.util.Log
 import com.example.retrocomputer.AddressingMode
 import com.example.retrocomputer.Disassembly
 import java.io.File
+import kotlin.reflect.typeOf
 
 class Disassembler : CPU() {
     fun step() {
@@ -13,7 +15,29 @@ class Disassembler : CPU() {
         log()
     }
 
-    fun loadMemory(rom: List<Int>, startAddress: Int = 0x8000): Map<Int, Disassembly> {
+    fun hexHandler(instruction: String) : MutableList<Int> {
+        val hex : MutableList<Int> = mutableListOf()
+        val stringToHex = instruction.split(" ")
+        val opcode = stringToHex[0]
+        if (stringToHex.size > 1) {
+            val addressingMode = stringToHex[1]
+        } else {
+            hex.add(lookup.indexOf(lookup.find { it.name == opcode }))
+        }
+        Log.d("hex", hex.toString())
+        return hex
+    }
+
+    fun loadMemoryAsembly(assembly: String, startAddress: Int = 0x8000) {
+        val lines : MutableList<String> = mutableListOf()
+        val rom : MutableList<Int> = mutableListOf()
+        assembly.split("\n").forEach { lines.add(it.trim()) }
+        lines.forEachIndexed{ _, line -> hexHandler(line).forEachIndexed{_, hex -> rom.add(hex)}}
+//        Log.d("rom", rom.toString())
+//        loadMemory(rom, startAddress)
+    }
+
+    fun loadMemory(rom: MutableList<Int>, startAddress: Int = 0x8000): Map<Int, Disassembly> {
         if(startAddress < 0){
             throw Exception("Start address '$startAddress' out of bounds. [0-${memory.ram.size}]")
         } else if((startAddress + rom.size) > memory.ram.size){
@@ -111,9 +135,9 @@ class Disassembler : CPU() {
         }
     }
 
-    init {
-        log(true)
-    }
+//    init {
+//        log(true)
+//    }
 
     fun log(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
         if(!File(path).exists() || init){
