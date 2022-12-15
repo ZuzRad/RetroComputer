@@ -14,6 +14,7 @@ class Disassembler : CPU() {
 //    TODO: Dokończyć memory?? o ile bedzie potrzebne
 //    TODO: KLASA ASSEMBLER
 
+
     //    TODO: KLASA LABELS
     private class Labels {
         var labelIndex : MutableList<String> = mutableListOf()
