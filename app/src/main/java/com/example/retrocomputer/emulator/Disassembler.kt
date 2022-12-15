@@ -20,6 +20,9 @@ class Disassembler : CPU() {
         fun getPC(parameter: String) : Int {
             return -1
         }
+        fun find(label: String) : Boolean {
+            return true
+        }
     }
 
     private var branchOutOfRange : Boolean = false
@@ -210,7 +213,7 @@ class Disassembler : CPU() {
     private fun checkImmediate(parameter : String, command : String) : MutableList<Int>? {
         val hex : MutableList<Int> = mutableListOf()
         if (command.isEmpty()) { return null }
-        var value : Int; var label : Int; var hilo : Int; var addr : Int
+        var value : Int; var label : String; var hilo : String; var addr : Int
 
         val checkRegex = Regex("^#([\\w$%]+)\$", RegexOption.IGNORE_CASE)
         if (parameter.matches(checkRegex)) {
@@ -220,6 +223,32 @@ class Disassembler : CPU() {
                 branchPC++
                 hex.add(operand)
                 branchPC++
+                return hex
+            }
+        }
+
+        // Label lo/hi
+        if(parameter.matches(Regex("^#[<>]\\w+\$"))) {
+            label = parameter.replace(Regex("^#[<>](\\w+)\$"), "$1")
+            hilo = parameter.replace(Regex("^#([<>]).*\$"), "$1")
+            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+            branchPC++
+            if (labels.find(label)) {
+                addr = labels.getPC(label)
+                when (hilo) {
+                    ">" -> {
+                        hex.add((addr shr 8) and 0xff)
+                        branchPC++
+                        return hex
+                    }
+                    "<" -> {
+                        hex.add(addr and 0xff)
+                        return hex
+                    }
+                    else -> return hex
+                }
+            } else {
+                hex.add(0x00)
                 return hex
             }
         }
