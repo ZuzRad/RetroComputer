@@ -100,6 +100,6 @@ class CPUTest {
         cpu.step() // NOP
         cpu.step() // NOP
 
-        cpu.logMemory(startAddress)
+        cpu.logMemoryTest(startAddress)
     }
 }

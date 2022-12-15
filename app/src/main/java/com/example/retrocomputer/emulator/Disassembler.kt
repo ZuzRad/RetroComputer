@@ -4,13 +4,6 @@ import android.util.Log
 import java.io.File
 
 class Disassembler : CPU() {
-    fun step() {
-        while (cycles > 0) {
-            clock()
-        }
-        clock()
-        log()
-    }
 
     private val labels : MutableList<String> = mutableListOf()
     private var branchOutOfRange : Boolean = false
@@ -446,7 +439,7 @@ class Disassembler : CPU() {
         val testRom : MutableList<String> = mutableListOf()
         rom.forEach { testRom.add(it.toString(16).uppercase()) }
         Log.d("rom", testRom.toString())
-//        loadMemory(rom, startAddress)
+        loadMemory(rom, startAddress)
     }
 
     fun loadMemory(rom: MutableList<Int>, startAddress: Int = 0x8000): Map<Int, Disassembly> {
@@ -458,10 +451,10 @@ class Disassembler : CPU() {
         memory.write(0xFFFC, 0x00)
         memory.write(0xFFFC + 1, 0x80)
         rom.forEachIndexed{i,_ -> memory.ram[i + startAddress] = rom[i] }
-        return disassemble(startAddress, startAddress + rom.size - 1)
+        return disassembleTest(startAddress, startAddress + rom.size - 1)
     }
 
-    fun disassemble(start: Int = 0x8000, stop: Int = 0xFFFF): Map<Int, Disassembly>{
+    fun disassembleTest(start: Int = 0x8000, stop: Int = 0xFFFF): Map<Int, Disassembly>{
         val disassembled: MutableMap<Int, Disassembly> = mutableMapOf()
         var currentAddress : Int = start
         var savedAddress: Int
@@ -530,11 +523,12 @@ class Disassembler : CPU() {
             disassembled[savedAddress] = Disassembly(savedAddress, asm.padEnd(30, ' '),
                 instruction, hex.joinToString(" "){"%02X".format(it)})
         }
-        outputDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
+
+//        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
         return disassembled
     }
 
-    private fun outputDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){
+    private fun outputTestDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){
         File(path).printWriter().use { out ->
             out.println("-".repeat(66))
             out.println("Index     Address   Assembly            Hex Dump     Mode   Cycles")
@@ -547,11 +541,19 @@ class Disassembler : CPU() {
         }
     }
 
+    fun step() {
+        while (cycles > 0) {
+            clock()
+        }
+        clock()
+        logTest()
+    }
+
 //    init {
 //        log(true)
 //    }
 
-    private fun log(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
+    private fun logTest(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
         if(!File(path).exists() || init){
             File(path).printWriter().use{ out ->
                 out.println("-".repeat(55))
@@ -559,23 +561,23 @@ class Disassembler : CPU() {
                 out.println("-".repeat(55))
             }
         } else {
-            File(path).appendText(showDebug() + "\n")
+            File(path).appendText(showDebugTest() + "\n")
         }
     }
 
-    private fun showDebug(): String {
+    private fun showDebugTest(): String {
         return "%02X    %s    %02X    %02X    %02X    %04X    %02X    ".format(
             opcode, lookup[opcode].name, A, X, Y, PC, SP) +
                 " ${status.toString(2).padStart(8,'0')}"
     }
 
-    fun logMemory(page: Int, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
+    fun logMemoryTest(page: Int, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
         var out = "\n" + "-".repeat(55) + " \n\n"
-        out += showPage(0x00) + "\n" + showPage(page)
+        out += showPageTest(0x00) + "\n" + showPageTest(page)
         File(path).appendText(out + "\n")
     }
 
-    private fun showPage(page: Int = 0): String {
+    private fun showPageTest(page: Int = 0): String {
         var out = ""
         for(i in 0..15) {
             var line = "$%04X:  ".format((i * 16) + page)
