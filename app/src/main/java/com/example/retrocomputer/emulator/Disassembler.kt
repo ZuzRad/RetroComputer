@@ -1,5 +1,6 @@
 package com.example.retrocomputer
 
+import android.util.Log
 import java.io.File
 
 class Disassembler : CPU() {
@@ -12,12 +13,11 @@ class Disassembler : CPU() {
     }
 
 //    TODO: Dokończyć memory?? o ile bedzie potrzebne
-//    TODO: KLASA ASSEMBLER
+//    TODO: parseWordOperand
 
     //    TODO: KLASA LABELS
     private class Labels {
         var labelIndex : MutableList<String> = mutableListOf()
-//        TODO: funkcja getPC
 
         fun getPC(parameter: String) : Int {
             for(index in labelIndex){
@@ -27,9 +27,6 @@ class Disassembler : CPU() {
                 }
             }
             return -1
-        }
-        fun find(label: String) : Boolean {
-            return true
         }
 
         fun find(label: String):Boolean{
@@ -112,7 +109,7 @@ class Disassembler : CPU() {
 
         val checkRegex = Regex("^([\\w$]+)\$", RegexOption.IGNORE_CASE)
         if (parameter.matches(checkRegex)) {
-            val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
+            val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
                 hex.add(lookup.indexOf(lookup.find { it.name == command }))
                 branchPC++
@@ -120,9 +117,27 @@ class Disassembler : CPU() {
                 branchPC++
             }
         }
-//        /////////////////////////////////////////////////////////////////////////////////////
-//        TODO: IT COULD BE A LABEL TOO...
-//        /////////////////////////////////////////////////////////////////////////////////////
+
+        var addr : Int
+        if (parameter.matches(Regex("^\\w+\$"))) {
+            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+            branchPC++
+            if (labels.find(parameter)) {
+                addr = labels.getPC(parameter)
+                if (addr < 0 || addr > 0xffff) return hex
+                hex.add(addr)
+                branchPC++
+                hex.add(addr shr 8)
+                branchPC++
+                return hex
+            } else {
+                hex.add(0xffff)
+                branchPC++
+                hex.add(0xffff shr 8)
+                branchPC++
+                return hex
+            }
+        }
         return hex
     }
     private fun checkAbsoluteX(parameter : String, command : String) : MutableList<Int>? {
@@ -131,17 +146,38 @@ class Disassembler : CPU() {
 
         val checkRegex = Regex("^([\\w$]+),X\$", RegexOption.IGNORE_CASE)
         if (parameter.matches(checkRegex)) {
-            val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
+            val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
                 hex.add(lookup.indexOf(lookup.find { it.name == command }))
                 branchPC++
                 hex.add(operand)
                 branchPC++
+                hex.add(operand shr 8)
+                branchPC++
             }
         }
-//        /////////////////////////////////////////////////////////////////////////////////////
-//        TODO: IT COULD BE A LABEL TOO...
-//        /////////////////////////////////////////////////////////////////////////////////////
+
+        var labelParameter : String; var addr : Int
+        if (parameter.matches(Regex("^\\w+,X\$", RegexOption.IGNORE_CASE))) {
+            labelParameter = parameter.replace(Regex(",X\$", RegexOption.IGNORE_CASE), "")
+            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+            branchPC++
+            if (labels.find(labelParameter)) {
+                addr = labels.getPC(labelParameter)
+                if (addr < 0 || addr > 0xffff) return hex
+                hex.add(addr)
+                branchPC++
+                hex.add(addr shr 8)
+                branchPC++
+                return hex
+            } else {
+                hex.add(0xffff)
+                branchPC++
+                hex.add(0xffff shr 8)
+                branchPC++
+                return hex
+            }
+        }
         return hex
     }
     private fun checkAbsoluteY(parameter : String, command : String) : MutableList<Int>? {
@@ -150,7 +186,7 @@ class Disassembler : CPU() {
 
         val checkRegex = Regex("^([\\w$]+),Y\$", RegexOption.IGNORE_CASE)
         if (parameter.matches(checkRegex)) {
-            val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
+            val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
                 hex.add(lookup.indexOf(lookup.find { it.name == command }))
                 branchPC++
@@ -158,9 +194,28 @@ class Disassembler : CPU() {
                 branchPC++
             }
         }
-//        /////////////////////////////////////////////////////////////////////////////////////
-//        TODO: IT COULD BE A LABEL TOO...
-//        /////////////////////////////////////////////////////////////////////////////////////
+
+        var labelParameter : String; var addr : Int
+        if (parameter.matches(Regex("^\\w+,Y\$", RegexOption.IGNORE_CASE))) {
+            labelParameter = parameter.replace(Regex(",Y\$", RegexOption.IGNORE_CASE), "")
+            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+            branchPC++
+            if (labels.find(labelParameter)) {
+                addr = labels.getPC(labelParameter)
+                if (addr < 0 || addr > 0xffff) return hex
+                hex.add(addr)
+                branchPC++
+                hex.add(addr shr 8)
+                branchPC++
+                return hex
+            } else {
+                hex.add(0xffff)
+                branchPC++
+                hex.add(0xffff shr 8)
+                branchPC++
+                return hex
+            }
+        }
         return hex
     }
     private fun checkIndirect(parameter : String, command : String) : MutableList<Int>? {
@@ -169,11 +224,13 @@ class Disassembler : CPU() {
 
         val checkRegex = Regex("^\\(([\\w$]+)\\)\$", RegexOption.IGNORE_CASE)
         if (parameter.matches(checkRegex)) {
-            val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
+            val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
                 hex.add(lookup.indexOf(lookup.find { it.name == command }))
                 branchPC++
                 hex.add(operand)
+                branchPC++
+                hex.add(operand shr 8)
                 branchPC++
             }
         }
@@ -321,30 +378,22 @@ class Disassembler : CPU() {
             checkIndirectY(parameter, command)?.let { hex.addAll(it) }
             checkImmediate(parameter, command)?.let { hex.addAll(it) }
             checkBranch(parameter, command)?.let { hex.addAll(it) }
-
-//            Log.d("label", label)
-//            Log.d("command", command)
-//            Log.d("parameter", parameter)
-
-//            val stringToHex = line.split(" ")
-//            val opcode = stringToHex[0]
-//            if (stringToHex.size > 1) {
-////                val addressingMode = stringToHex[1]
-//            } else {
-////                hex.add(lookup.indexOf(lookup.find { it.name == opcode }))
-//            }
         }
-//        Log.d("hex", hex.toString())
         return hex
     }
 
     fun loadMemoryAssembly(assembly: String, startAddress: Int = 0x8000) {
         val rom : MutableList<Int> = mutableListOf()
+        branchOutOfRange = false
+        reset()
+        labels.reset()
+        branchPC = startAddress
+        labels.indexLines(assembly)
         branchPC = startAddress
         assemble(assembly).forEachIndexed{_, hex -> rom.add(hex)}
 //        TODO: SOMETHING BETTER HERE / TOAST ON UI
         if (branchOutOfRange) return
-//        Log.d("rom", rom.toString())
+        Log.d("rom", rom.toString())
 //        loadMemory(rom, startAddress)
     }
 
