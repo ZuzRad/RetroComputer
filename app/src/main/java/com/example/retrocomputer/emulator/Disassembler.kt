@@ -19,7 +19,7 @@ class Disassembler : CPU() {
 
     private fun getPCfromLabel(parameter: String) : Int {
         for(index in labelIndex){
-            var nameAndAddr = index.split("|")
+            val nameAndAddr = index.split("|")
             if(parameter === nameAndAddr[0]){
                 return (nameAndAddr[1]).toInt()
             }
@@ -29,7 +29,7 @@ class Disassembler : CPU() {
 
     private fun findLabel(label: String):Boolean{
         for(index in labelIndex){
-            var nameAndAddr = index.split("|")
+            val nameAndAddr = index.split("|")
             if(label === nameAndAddr[0]){
                 return true
             }
@@ -44,10 +44,6 @@ class Disassembler : CPU() {
     private var branchOutOfRange : Boolean = false
     private var branchPC : Int = 0
 
-    public fun getBranchPC() : Int {
-        return branchPC
-    }
-
     private fun parseByteOperand(parameter: String) : Int {
         var value : Int = -1
         val checkRegexDecimal = Regex("^([0-9]{1,3})\$")
@@ -56,14 +52,21 @@ class Disassembler : CPU() {
         if (parameter.matches(checkRegexHex)) value = checkRegexHex.find(parameter)?.groupValues?.get(1)!!.toInt(16)
         val checkRegexBinary = Regex("^%([0-1]{1,8})\$")
         if (parameter.matches(checkRegexBinary)) value = checkRegexBinary.find(parameter)?.groupValues?.get(1)!!.toInt(2)
-        if (value >= 0 && value <= 0xff) return value
-        else return -1
+        return if (value in 0..0xff) value
+        else -1
     }
 
     private fun parseWordOperand(parameter: String) : Int {
-        var value : Int
-        val checkRegex = Regex("^([\\w$]+),X\$", RegexOption.IGNORE_CASE)
-        return -1
+        var value = -1
+        var checkRegex = Regex("^\\\$([0-9a-f]{3,4})\$", RegexOption.IGNORE_CASE)
+        if (parameter.matches(checkRegex)) {
+            value = checkRegex.find(parameter)?.groupValues?.get(1)!!.toInt(16)
+        } else {
+            checkRegex = Regex("^([0-9]{1,5})\$", RegexOption.IGNORE_CASE)
+            if (parameter.matches(checkRegex)) value = checkRegex.find(parameter)?.groupValues?.get(1)!!.toInt(10)
+        }
+        return if (value in 0..0xffff) value
+        else -1
     }
 
     private fun checkSingle(parameter : String, command : String) : MutableList<Int>? {
@@ -131,12 +134,11 @@ class Disassembler : CPU() {
             }
         }
 
-        var addr : Int
         if (parameter.matches(Regex("^\\w+\$"))) {
             hex.add(lookup.indexOf(lookup.find { it.name == command }))
             branchPC++
             if (findLabel(parameter)) {
-                addr = getPCfromLabel(parameter)
+                val addr = getPCfromLabel(parameter)
                 if (addr < 0 || addr > 0xffff) return hex
                 hex.add(addr)
                 branchPC++
@@ -170,13 +172,12 @@ class Disassembler : CPU() {
             }
         }
 
-        var labelParameter : String; var addr : Int
         if (parameter.matches(Regex("^\\w+,X\$", RegexOption.IGNORE_CASE))) {
-            labelParameter = parameter.replace(Regex(",X\$", RegexOption.IGNORE_CASE), "")
+            val labelParameter = parameter.replace(Regex(",X\$", RegexOption.IGNORE_CASE), "")
             hex.add(lookup.indexOf(lookup.find { it.name == command }))
             branchPC++
             if (findLabel(labelParameter)) {
-                addr = getPCfromLabel(labelParameter)
+                val addr = getPCfromLabel(labelParameter)
                 if (addr < 0 || addr > 0xffff) return hex
                 hex.add(addr)
                 branchPC++
@@ -208,13 +209,12 @@ class Disassembler : CPU() {
             }
         }
 
-        var labelParameter : String; var addr : Int
         if (parameter.matches(Regex("^\\w+,Y\$", RegexOption.IGNORE_CASE))) {
-            labelParameter = parameter.replace(Regex(",Y\$", RegexOption.IGNORE_CASE), "")
+            val labelParameter = parameter.replace(Regex(",Y\$", RegexOption.IGNORE_CASE), "")
             hex.add(lookup.indexOf(lookup.find { it.name == command }))
             branchPC++
             if (findLabel(labelParameter)) {
-                addr = getPCfromLabel(labelParameter)
+                val addr = getPCfromLabel(labelParameter)
                 if (addr < 0 || addr > 0xffff) return hex
                 hex.add(addr)
                 branchPC++
@@ -285,11 +285,11 @@ class Disassembler : CPU() {
         val hex : MutableList<Int> = mutableListOf()
         if (command.isEmpty()) { return null }
         var addr = -1
-        if (parameter.matches(Regex("\\w+"))) addr = labels.getPC(parameter)
-        if (addr === -1) { hex.addAll(listOf(0x00, 0x00)); branchPC++; branchPC++; return hex }
+        if (parameter.matches(Regex("\\w+"))) addr = getPCfromLabel(parameter)
+        if (addr == -1) { hex.addAll(listOf(0x00, 0x00)); branchPC++; branchPC++; return hex }
         hex.add(lookup.indexOf(lookup.find { it.name == command }))
         branchPC++
-        var distance = addr - branchPC - 1
+        val distance = addr - branchPC - 1
         if (distance < -128 || distance > 127) {
             branchOutOfRange = true
             return hex
@@ -301,7 +301,6 @@ class Disassembler : CPU() {
     private fun checkImmediate(parameter : String, command : String) : MutableList<Int>? {
         val hex : MutableList<Int> = mutableListOf()
         if (command.isEmpty()) { return null }
-        var value : Int; var label : String; var hilo : String; var addr : Int
 
         val checkRegex = Regex("^#([\\w$%]+)\$", RegexOption.IGNORE_CASE)
         if (parameter.matches(checkRegex)) {
@@ -317,23 +316,23 @@ class Disassembler : CPU() {
 
         // Label lo/hi
         if(parameter.matches(Regex("^#[<>]\\w+\$"))) {
-            label = parameter.replace(Regex("^#[<>](\\w+)\$"), "$1")
-            hilo = parameter.replace(Regex("^#([<>]).*\$"), "$1")
+            val label = parameter.replace(Regex("^#[<>](\\w+)\$"), "$1")
+            val hilo = parameter.replace(Regex("^#([<>]).*\$"), "$1")
             hex.add(lookup.indexOf(lookup.find { it.name == command }))
             branchPC++
             if (findLabel(label)) {
-                addr = getPCfromLabel(label)
-                when (hilo) {
+                val addr = getPCfromLabel(label)
+                return when (hilo) {
                     ">" -> {
                         hex.add((addr shr 8) and 0xff)
                         branchPC++
-                        return hex
+                        hex
                     }
                     "<" -> {
                         hex.add(addr and 0xff)
-                        return hex
+                        hex
                     }
-                    else -> return hex
+                    else -> hex
                 }
             } else {
                 hex.add(0x00)
@@ -349,7 +348,7 @@ class Disassembler : CPU() {
         val hex : MutableList<Int> = mutableListOf()
 
         for (line in lines) {
-            var label = ""; var command = ""; var parameter = "";
+            var label : String; var command : String; var parameter : String
             if (line === "") {
                 continue
             }
@@ -369,10 +368,10 @@ class Disassembler : CPU() {
 
             command = command.uppercase()
 
-            if (input.matches(Regex("^\\w+\\s+.*?\$"))) {
-                parameter = input.replace(Regex("^\\w+\\s+(.*?)"), "$1")
+            parameter = if (input.matches(Regex("^\\w+\\s+.*?\$"))) {
+                input.replace(Regex("^\\w+\\s+(.*?)"), "$1")
             } else if (input.matches(Regex("^\\w+\$"))) {
-                parameter = ""
+                ""
             } else {
                 continue
             }
@@ -431,7 +430,7 @@ class Disassembler : CPU() {
             throw Exception("Cannot start at position greater than stopping position")
         } else if(start < 0 || start > memory.ram.size){
             throw Exception("Start position '$start' out of bounds")
-        } else if(stop < 0 || stop > memory.ram.size){
+        } else if(stop > memory.ram.size) {
             throw Exception("Stop position '$stop' out of bounds")
         }
 
@@ -512,7 +511,7 @@ class Disassembler : CPU() {
 //        log(true)
 //    }
 
-    fun log(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
+    private fun log(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
         if(!File(path).exists() || init){
             File(path).printWriter().use{ out ->
                 out.println("-".repeat(55))
@@ -524,7 +523,7 @@ class Disassembler : CPU() {
         }
     }
 
-    fun showDebug(): String {
+    private fun showDebug(): String {
         return "%02X    %s    %02X    %02X    %02X    %04X    %02X    ".format(
             opcode, lookup[opcode].name, A, X, Y, PC, SP) +
                 " ${status.toString(2).padStart(8,'0')}"
@@ -536,7 +535,7 @@ class Disassembler : CPU() {
         File(path).appendText(out + "\n")
     }
 
-    fun showPage(page: Int = 0): String {
+    private fun showPage(page: Int = 0): String {
         var out = ""
         for(i in 0..15) {
             var line = "$%04X:  ".format((i * 16) + page)
