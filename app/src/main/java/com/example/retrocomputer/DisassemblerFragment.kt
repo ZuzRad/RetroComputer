@@ -39,7 +39,7 @@ class DisassemblerFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentDisassemblerBinding.inflate(inflater, container, false)
-        assembly?.let { disassembler.loadMemoryAsembly(it) }
+        assembly?.let { disassembler.loadMemoryAssembly(it) }
 
         binding.textViewMainEmul.text = assembly
         return binding.root
