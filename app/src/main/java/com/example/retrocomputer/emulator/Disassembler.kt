@@ -16,12 +16,30 @@ class Disassembler : CPU() {
 
     //    TODO: KLASA LABELS
     private class Labels {
+        var labelIndex : MutableList<String> = mutableListOf()
 //        TODO: funkcja getPC
+
         fun getPC(parameter: String) : Int {
+            for(index in labelIndex){
+                var nameAndAddr = index.split("|")
+                if(parameter === nameAndAddr[0]){
+                    return (nameAndAddr[1]).toInt()
+                }
+            }
             return -1
         }
         fun find(label: String) : Boolean {
             return true
+        }
+
+        fun find(label: String):Boolean{
+            for(index in labelIndex){
+                var nameAndAddr = index.split("|")
+                if(label === nameAndAddr[0]){
+                    return true
+                }
+            }
+            return false
         }
     }
 
