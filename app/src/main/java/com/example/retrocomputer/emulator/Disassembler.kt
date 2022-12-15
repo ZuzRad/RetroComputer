@@ -18,6 +18,38 @@ class Disassembler : CPU() {
     //    TODO: KLASA LABELS
     var labelIndex : MutableList<String> = mutableListOf()
 
+    fun pushLabel(name : String) : Boolean{
+        if(findLabel(name)){
+            return false
+        }
+        labelIndex.add(name + "|")
+        return true
+    }
+
+    fun indexLine(input : String) : Boolean{
+        var currentPC = branchPC
+        assemble(input)     //???
+
+        if(input.matches(Regex("^\\w+:"))){
+            var label = input.replace(Regex("(^\\w+):.*\$"), "$1")
+            return pushLabel(label + "|" + currentPC)
+        }
+        return true
+    }
+
+    fun indexLabelLines(lines : String) : Boolean{
+        for(line in lines){
+            if(!indexLine(line.toString())){    //???
+                return false
+            }
+        }
+        return true
+    }
+
+    fun resetLabel(){
+        labelIndex.clear()
+    }
+
     private fun getPCfromLabel(parameter: String) : Int {
         for(index in labelIndex){
             var nameAndAddr = index.split("|")
