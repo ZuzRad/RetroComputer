@@ -12,70 +12,29 @@ class Disassembler : CPU() {
         log()
     }
 
-//    TODO: Dokończyć memory?? o ile bedzie potrzebne
+    private val labels : MutableList<String> = mutableListOf()
+    private var branchOutOfRange : Boolean = false
+    private var branchPC : Int = 0
 
-
-    //    TODO: KLASA LABELS
-    var labelIndex : MutableList<String> = mutableListOf()
-
-    fun pushLabel(name : String) : Boolean{
-        if(findLabel(name)){
-            return false
-        }
-        labelIndex.add(name + "|")
-        return true
-    }
-
-    fun indexLine(input : String) : Boolean{
-        var currentPC = branchPC
-        assemble(input)     //???
-
-        if(input.matches(Regex("^\\w+:"))){
-            var label = input.replace(Regex("(^\\w+):.*\$"), "$1")
-            return pushLabel(label + "|" + currentPC)
-        }
-        return true
-    }
-
-    fun indexLabelLines(lines : String) : Boolean{
-        for(line in lines){
-            if(!indexLine(line.toString())){    //???
-                return false
-            }
-        }
-        return true
-    }
-
-    fun resetLabel(){
-        labelIndex.clear()
-    }
-
-    private fun getPCfromLabel(parameter: String) : Int {
-        for(index in labelIndex){
-            val nameAndAddr = index.split("|")
-            if(parameter === nameAndAddr[0]){
-                return (nameAndAddr[1]).toInt()
-            }
-        }
-        return -1
-    }
-
-    private fun findLabel(label: String):Boolean{
-        for(index in labelIndex){
-            val nameAndAddr = index.split("|")
-            if(label === nameAndAddr[0]){
+    fun findLabel(label : String) : Boolean {
+        labels.forEach {
+            val nameAndAddr = it.split("|")
+            if(label == nameAndAddr[0]){
                 return true
             }
         }
         return false
     }
 
-    private fun resetLabels() {
-        labelIndex = mutableListOf()
+    fun getPCfromLabel(parameter: String) : Int {
+        labels.forEach {
+            val nameAndAddr = it.split("|")
+            if(parameter == nameAndAddr[0]){
+                return (nameAndAddr[1]).toInt()
+            }
+        }
+        return -1
     }
-
-    private var branchOutOfRange : Boolean = false
-    private var branchPC : Int = 0
 
     private fun parseByteOperand(parameter: String) : Int {
         var value : Int = -1
@@ -102,277 +61,308 @@ class Disassembler : CPU() {
         else -1
     }
 
-    private fun checkSingle(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkImplied(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
-        if (parameter !== "" && parameter !== "A") { return null }
-        hex.add(lookup.indexOf(lookup.find { it.name == command }))
-        branchPC++
-        return hex
+        if (command.isEmpty()) { return Pair(false, hex) }
+        if (parameter != "" && parameter != "A") { return Pair(false, hex) }
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.IMP })
+        if (opcodeIndex != -1) {
+            hex.add(opcodeIndex)
+            branchPC++
+            return Pair(true, hex)
+        }
+        return Pair(false, hex)
     }
-    private fun checkZeroPage(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkZeroPage(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.ZP0 })
         val operand = parseByteOperand(parameter)
-        if (operand >= 0) {
-            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+        if (operand >= 0 && opcodeIndex != -1) {
+            hex.add(opcodeIndex)
             branchPC++
-            hex.add(operand)
+            hex.add(operand and 0xff)
             branchPC++
+            return Pair(true, hex)
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkZeroPageX(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkZeroPageX(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.ZPY })
         val checkRegex = Regex("^([\\w$]+),X\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkZeroPageY(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkZeroPageY(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.ZPY })
         val checkRegex = Regex("^([\\w$]+),Y\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkAbsolute(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkAbsolute(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
 
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.ABS })
         val checkRegex = Regex("^([\\w$]+)\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
+                hex.add((operand shr 8)  and 0xff)
+                branchPC++
+                return Pair(true, hex)
             }
         }
 
-        if (parameter.matches(Regex("^\\w+\$"))) {
-            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+        if (parameter.matches(Regex("^\\w+\$")) && opcodeIndex != -1) {
+            hex.add(opcodeIndex)
             branchPC++
             if (findLabel(parameter)) {
                 val addr = getPCfromLabel(parameter)
-                if (addr < 0 || addr > 0xffff) return hex
-                hex.add(addr)
+                if (addr < 0 || addr > 0xffff) return Pair(false, hex)
+                hex.add(addr  and 0xff)
                 branchPC++
-                hex.add(addr shr 8)
+                hex.add((addr shr 8) and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             } else {
-                hex.add(0xffff)
+                hex.add(0xffff and 0xff)
                 branchPC++
-                hex.add(0xffff shr 8)
+                hex.add((0xffff shr 8) and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkAbsoluteX(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkAbsoluteX(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
 
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.ABX })
         val checkRegex = Regex("^([\\w$]+),X\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
-                hex.add(operand shr 8)
+                hex.add((operand shr 8) and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
 
-        if (parameter.matches(Regex("^\\w+,X\$", RegexOption.IGNORE_CASE))) {
+        if (parameter.matches(Regex("^\\w+,X\$", RegexOption.IGNORE_CASE)) && opcodeIndex != -1) {
             val labelParameter = parameter.replace(Regex(",X\$", RegexOption.IGNORE_CASE), "")
-            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+            hex.add(opcodeIndex)
             branchPC++
             if (findLabel(labelParameter)) {
                 val addr = getPCfromLabel(labelParameter)
-                if (addr < 0 || addr > 0xffff) return hex
-                hex.add(addr)
+                if (addr < 0 || addr > 0xffff) return Pair(false, hex)
+                hex.add(addr and 0xff)
                 branchPC++
-                hex.add(addr shr 8)
+                hex.add((addr shr 8) and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             } else {
-                hex.add(0xffff)
+                hex.add(0xffff and 0xff)
                 branchPC++
-                hex.add(0xffff shr 8)
+                hex.add((0xffff shr 8) and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkAbsoluteY(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkAbsoluteY(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
 
         val checkRegex = Regex("^([\\w$]+),Y\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.ABY })
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
 
-        if (parameter.matches(Regex("^\\w+,Y\$", RegexOption.IGNORE_CASE))) {
+        if (parameter.matches(Regex("^\\w+,Y\$", RegexOption.IGNORE_CASE)) && opcodeIndex != -1) {
             val labelParameter = parameter.replace(Regex(",Y\$", RegexOption.IGNORE_CASE), "")
-            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+            hex.add(opcodeIndex)
             branchPC++
             if (findLabel(labelParameter)) {
                 val addr = getPCfromLabel(labelParameter)
-                if (addr < 0 || addr > 0xffff) return hex
-                hex.add(addr)
+                if (addr < 0 || addr > 0xffff) return Pair(false, hex)
+                hex.add(addr and 0xff)
                 branchPC++
-                hex.add(addr shr 8)
+                hex.add((addr shr 8) and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             } else {
-                hex.add(0xffff)
+                hex.add(0xffff and 0xff)
                 branchPC++
-                hex.add(0xffff shr 8)
+                hex.add((0xffff shr 8) and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkIndirect(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkIndirect(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
 
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.IND })
         val checkRegex = Regex("^\\(([\\w$]+)\\)\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseWordOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
-                hex.add(operand shr 8)
+                hex.add((operand shr 8) and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkIndirectX(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkIndirectX(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
 
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.IZX })
         val checkRegex = Regex("^\\(([\\w$]+),X\\)\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkIndirectY(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkIndirectY(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
 
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.IZY })
         val checkRegex = Regex("^\\(([\\w$]+)\\),Y\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
-    private fun checkBranch(parameter : String, command : String) : MutableList<Int>? {
+    private fun checkRelative(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
+        if (command.isEmpty()) { return Pair(false, hex) }
         var addr = -1
-        if (parameter.matches(Regex("\\w+"))) addr = getPCfromLabel(parameter)
-        if (addr == -1) { hex.addAll(listOf(0x00, 0x00)); branchPC++; branchPC++; return hex }
-        hex.add(lookup.indexOf(lookup.find { it.name == command }))
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.REL })
+        if (parameter.matches(Regex("\\w+")) && opcodeIndex != -1) addr = getPCfromLabel(parameter)
+        if (addr == -1) { hex.addAll(listOf(0x00, 0x00)); branchPC++; branchPC++; return Pair(false, hex) }
+        hex.add(opcodeIndex)
         branchPC++
-        val distance = addr - branchPC - 1
+        var distance = addr - branchPC - 1
         if (distance < -128 || distance > 127) {
             branchOutOfRange = true
-            return hex
+            return Pair(false, hex)
         }
-        hex.add(distance)
+        hex.add(distance and 0xff)
         branchPC++
-        return hex
+        return Pair(true, hex)
     }
-    private fun checkImmediate(parameter : String, command : String) : MutableList<Int>? {
-        val hex : MutableList<Int> = mutableListOf()
-        if (command.isEmpty()) { return null }
 
+    private fun checkImmediate(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
+        val hex : MutableList<Int> = mutableListOf()
+        if (command.isEmpty()) { return Pair(false, hex) }
+
+        val opcodeIndex = lookup.indexOf(lookup.filter { it.name == command }.find { it.mode == AddressingMode.IMM })
         val checkRegex = Regex("^#([\\w$%]+)\$", RegexOption.IGNORE_CASE)
-        if (parameter.matches(checkRegex)) {
+        if (parameter.matches(checkRegex) && opcodeIndex != -1) {
             val operand = parseByteOperand(checkRegex.find(parameter)?.groupValues?.get(1)!!)
             if (operand >= 0) {
-                hex.add(lookup.indexOf(lookup.find { it.name == command }))
+                hex.add(opcodeIndex)
                 branchPC++
-                hex.add(operand)
+                hex.add(operand and 0xff)
                 branchPC++
-                return hex
+                return Pair(true, hex)
             }
         }
 
         // Label lo/hi
-        if(parameter.matches(Regex("^#[<>]\\w+\$"))) {
-            val label = parameter.replace(Regex("^#[<>](\\w+)\$"), "$1")
-            val hilo = parameter.replace(Regex("^#([<>]).*\$"), "$1")
-            hex.add(lookup.indexOf(lookup.find { it.name == command }))
+        if(parameter.matches(Regex("^#[<>]\\w+\$")) && opcodeIndex != -1) {
+            val checkLabelRegex = Regex("^#[<>](\\w+)\$")
+            val checkHiloRegex = Regex("^#([<>]).*\$")
+            val label = checkLabelRegex.find(parameter)?.groupValues?.get(1)!!
+            val hilo = checkHiloRegex.find(parameter)?.groupValues?.get(1)!!
+            hex.add(opcodeIndex)
             branchPC++
             if (findLabel(label)) {
                 val addr = getPCfromLabel(label)
-                return when (hilo) {
+                when (hilo) {
                     ">" -> {
                         hex.add((addr shr 8) and 0xff)
                         branchPC++
-                        hex
+                        return Pair(true, hex)
                     }
                     "<" -> {
                         hex.add(addr and 0xff)
-                        hex
+                        branchPC++
+                        return Pair(true, hex)
                     }
-                    else -> hex
+                    else -> return Pair(false, hex)
                 }
             } else {
                 hex.add(0x00)
-                return hex
+                branchPC++
+                return Pair(true, hex)
             }
         }
-        return hex
+        return Pair(false, hex)
     }
 
     private fun assemble(assembly: String) : MutableList<Int> {
@@ -382,47 +372,65 @@ class Disassembler : CPU() {
 
         for (line in lines) {
             var label : String; var command : String; var parameter : String
-            if (line === "") {
+            if (line.isNullOrEmpty()) {
                 continue
             }
-            var input : String = line
 
-            if (input.matches(Regex("^\\w+:"))) {
-                label = input.replace(Regex("(^\\w+):.*\$"), "$1")
-                if (input.matches(Regex("^\\w+:[\\s]*\\w+.*\$"))) {
-                    input = input.replace(Regex("^\\w+:[\\s]*(.*)\$"), "$1")
-                    command = input.replace(Regex("^(\\w+).*\$"), "$1")
+            if (line.matches(Regex("^\\w+:"))) {
+                val checkLabelRegex = Regex("(^\\w+):.*\$")
+                label = checkLabelRegex.find(line)?.groupValues?.get(1)!!
+                if(!findLabel(label)){
+                    labels.add("$label|$branchPC")
+                }
+                if (line.matches(Regex("^\\w+:[\\s]*\\w+.*\$"))) {
+                    val inputRegex = Regex("^\\w+:[\\s]*(.*)\$", RegexOption.IGNORE_CASE)
+                    val input = inputRegex.find(line)?.groupValues?.get(1)!!
+                    val commandRegex = Regex("^(\\w+).*\$")
+                    command = commandRegex.find(input)?.groupValues?.get(1)!!
                 } else {
                     command = ""
                 }
             } else {
-                command = input.replace(Regex("^(\\w+).*\$"), "$1")
+                val checkCommandRegex = Regex("^(\\w+).*\$")
+                command = checkCommandRegex.find(line)?.groupValues?.get(1)!!
             }
 
             command = command.uppercase()
 
-            parameter = if (input.matches(Regex("^\\w+\\s+.*?\$"))) {
-                input.replace(Regex("^\\w+\\s+(.*?)"), "$1")
-            } else if (input.matches(Regex("^\\w+\$"))) {
-                ""
+            if (line.matches(Regex("^\\w+\\s+.*?\$"))) {
+                parameter = line.replace(Regex("^\\w+\\s+(.*?)"), "$1")
+            } else if (line.matches(Regex("^\\w+\$"))) {
+                parameter = ""
             } else {
                 continue
             }
 
             parameter = parameter.replace(" ", "")
 
-            checkSingle(parameter, command)?.let { hex.addAll(it) }
-            checkZeroPage(parameter, command)?.let { hex.addAll(it) }
-            checkZeroPageX(parameter, command)?.let { hex.addAll(it) }
-            checkZeroPageY(parameter, command)?.let { hex.addAll(it) }
-            checkAbsolute(parameter, command)?.let { hex.addAll(it) }
-            checkAbsoluteX(parameter, command)?.let { hex.addAll(it) }
-            checkAbsoluteY(parameter, command)?.let { hex.addAll(it) }
-            checkIndirect(parameter, command)?.let { hex.addAll(it) }
-            checkIndirectX(parameter, command)?.let { hex.addAll(it) }
-            checkIndirectY(parameter, command)?.let { hex.addAll(it) }
-            checkImmediate(parameter, command)?.let { hex.addAll(it) }
-            checkBranch(parameter, command)?.let { hex.addAll(it) }
+            val (boolean_implied, hex_implied) = checkImplied(parameter, command)
+            if (boolean_implied) { hex.addAll(hex_implied); continue; Log.d("implied", command) }
+            val (boolean_immediate, hex_immediate) = checkImmediate(parameter, command)
+            if (boolean_immediate) { hex.addAll(hex_immediate); continue; Log.d("immediate", command) }
+            val (boolean_zeroPage, hex_zeroPage) = checkZeroPage(parameter, command)
+            if (boolean_zeroPage) { hex.addAll(hex_zeroPage); continue; Log.d("zeroPage", command) }
+            val (boolean_zeroPageX, hex_zeroPageX) = checkZeroPageX(parameter, command)
+            if (boolean_zeroPageX) { hex.addAll(hex_zeroPageX); continue; Log.d("zeroPageX", command) }
+            val (boolean_zeroPageY, hex_zeroPageY) = checkZeroPageY(parameter, command)
+            if (boolean_zeroPageY) { hex.addAll(hex_zeroPageY); continue; Log.d("zeroPageY", command) }
+            val (boolean_absoluteX, hex_absoluteX) = checkAbsoluteX(parameter, command)
+            if (boolean_absoluteX) { hex.addAll(hex_absoluteX); continue; Log.d("absoluteX", command) }
+            val (boolean_absoluteY, hex_absoluteY) = checkAbsoluteY(parameter, command)
+            if (boolean_absoluteY) { hex.addAll(hex_absoluteY); continue; Log.d("absoluteY", command) }
+            val (boolean_indirect, hex_indirect) = checkIndirect(parameter, command)
+            if (boolean_indirect) { hex.addAll(hex_indirect); continue; Log.d("indirect", command) }
+            val (boolean_indirectX, hex_indirectX) = checkIndirectX(parameter, command)
+            if (boolean_indirectX) { hex.addAll(hex_indirectX); continue; Log.d("indirectX", command) }
+            val (boolean_indirectY, hex_indirectY) = checkIndirectY(parameter, command)
+            if (boolean_indirectY) { hex.addAll(hex_indirectY); continue; Log.d("indirectY", command) }
+            val (boolean_absolute, hex_absolute) = checkAbsolute(parameter, command)
+            if (boolean_absolute) { hex.addAll(hex_absolute); continue; Log.d("absolute", command) }
+            val (boolean_relative, hex_relative) = checkRelative(parameter, command)
+            if (boolean_relative) { hex.addAll(hex_relative); continue; Log.d("relative", command) }
         }
         return hex
     }
@@ -430,15 +438,14 @@ class Disassembler : CPU() {
     fun loadMemoryAssembly(assembly: String, startAddress: Int = 0x8000) {
         val rom : MutableList<Int> = mutableListOf()
         branchOutOfRange = false
-        reset()
-        resetLabels()
-        branchPC = startAddress
-        indexLabelLines(assembly)
+//        reset()
+        labels.clear()
         branchPC = startAddress
         assemble(assembly).forEachIndexed{_, hex -> rom.add(hex)}
-//        TODO: SOMETHING BETTER HERE / TOAST ON UI
-        if (branchOutOfRange) return
-        Log.d("rom", rom.toString())
+        if (branchOutOfRange) throw Exception("BRANCH OUT OF RANGE")
+        val testRom : MutableList<String> = mutableListOf()
+        rom.forEach { testRom.add(it.toString(16).uppercase()) }
+        Log.d("rom", testRom.toString())
 //        loadMemory(rom, startAddress)
     }
 

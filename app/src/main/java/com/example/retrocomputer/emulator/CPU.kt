@@ -131,12 +131,12 @@ open class CPU(val memory: Memory = Memory()) {
 
     fun handleAddressingMode(addrMode: AddressingMode): Int {
         return when(addrMode) {
-            AddressingMode.IMM -> IMM()
             AddressingMode.IMP -> IMP()
+            AddressingMode.REL -> REL()
+            AddressingMode.IMM -> IMM()
             AddressingMode.ZP0 -> ZP0()
             AddressingMode.ZPX -> ZPX()
             AddressingMode.ZPY -> ZPY()
-            AddressingMode.REL -> REL()
             AddressingMode.ABS -> ABS()
             AddressingMode.ABX -> ABX()
             AddressingMode.ABY -> ABY()
@@ -939,7 +939,7 @@ open class CPU(val memory: Memory = Memory()) {
         lookup[0x5E] = Instruction("LSR",Opcode.LSR,AddressingMode.ABX,7)
 
 //        NOP
-        lookup[0xEA] = Instruction("???",Opcode.NOP,AddressingMode.IMP,2)
+        lookup[0xEA] = Instruction("NOP",Opcode.NOP,AddressingMode.IMP,2)
 
 //        ORA
         lookup[0x09] = Instruction("ORA",Opcode.ORA,AddressingMode.IMM,2)
