@@ -431,7 +431,6 @@ class Disassembler : CPU() {
     fun loadMemoryAssembly(assembly: String, startAddress: Int = 0x8000): Map<Int, Disassembly> {
         val rom : MutableList<Int> = mutableListOf()
         branchOutOfRange = false
-//        reset()
         labels.clear()
         branchPC = startAddress
         assemble(assembly).forEachIndexed{_, hex -> rom.add(hex)}
@@ -523,8 +522,9 @@ class Disassembler : CPU() {
                 instruction, hex.joinToString(" "){"%02X".format(it)})
         }
 
+        reset()
+        while(PC != stop) step()
 //        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
-        Log.d("disassembled", disassembled.toString())
         return disassembled
     }
 
@@ -552,7 +552,7 @@ class Disassembler : CPU() {
     }
 
 //    init {
-//        log(true)
+//        logTest(true)
 //    }
 
     private fun logTest(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
@@ -579,7 +579,7 @@ class Disassembler : CPU() {
         File(path).appendText(out + "\n")
     }
 
-    private fun showPageTest(page: Int = 0): String {
+    fun showPageTest(page: Int = 0): String {
         var out = ""
         for(i in 0..15) {
             var line = "$%04X:  ".format((i * 16) + page)
