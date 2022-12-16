@@ -536,6 +536,29 @@ class Disassembler : CPU() {
 //        logTest()
     }
 
+    private fun hexToAscii(hexStr: String): String? {
+        val output = StringBuilder("")
+        var i = 0
+        while (i < hexStr.length) {
+            val str = hexStr.substring(i, i + 2)
+            output.append(str.toInt(16).toChar())
+            i += 2
+        }
+        return output.toString()
+    }
+
+    fun displayASCII() : String {
+        var output = ""
+        for(i in 0..15) {
+            for (j in 0..15) {
+                if (memory.ram[((i * 16) + j)] != 0x00) {
+                    output += hexToAscii("%02X".format(memory.ram[((i * 16) + j)]))
+                }
+            }
+        }
+        return output
+    }
+
 //    TEST FUNCTIONS
 
     private fun outputTestDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){

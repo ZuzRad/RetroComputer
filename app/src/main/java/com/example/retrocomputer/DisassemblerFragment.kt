@@ -86,9 +86,16 @@ class DisassemblerFragment : Fragment() {
 
         var stringRAM = disassembler.showPageTest(0x00)
         var stringROM = disassembler.showPageTest(0x8000)
-        var stringASCII = ""
+        var stringASCII = disassembler.displayASCII()
 
-        binding.textViewMainEmul.text = stringROM
+        binding.textViewAscii.text = stringASCII
+        binding.textViewMemory.text = stringRAM
+        binding.buttSwitch1.setOnClickListener {
+            binding.textViewMemory.text = stringRAM
+        }
+        binding.buttSwitch2.setOnClickListener {
+            binding.textViewMemory.text = stringROM
+        }
         return binding.root
     }
 
