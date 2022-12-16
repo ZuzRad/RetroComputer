@@ -299,7 +299,7 @@ class Disassembler : CPU() {
         if (addr == -1) { hex.addAll(listOf(0x00, 0x00)); branchPC++; branchPC++; return Pair(false, hex) }
         hex.add(opcodeIndex)
         branchPC++
-        var distance = addr - branchPC - 1
+        val distance = addr - branchPC - 1
         if (distance < -128 || distance > 127) {
             branchOutOfRange = true
             return Pair(false, hex)
@@ -365,7 +365,7 @@ class Disassembler : CPU() {
 
         for (line in lines) {
             var label : String; var command : String; var parameter : String
-            if (line.isNullOrEmpty()) {
+            if (line.isEmpty()) {
                 continue
             }
 
@@ -401,34 +401,34 @@ class Disassembler : CPU() {
             parameter = parameter.replace(" ", "")
 
             val (boolean_implied, hex_implied) = checkImplied(parameter, command)
-            if (boolean_implied) { hex.addAll(hex_implied); continue; Log.d("implied", command) }
+            if (boolean_implied) { hex.addAll(hex_implied); continue }
             val (boolean_immediate, hex_immediate) = checkImmediate(parameter, command)
-            if (boolean_immediate) { hex.addAll(hex_immediate); continue; Log.d("immediate", command) }
+            if (boolean_immediate) { hex.addAll(hex_immediate); continue }
             val (boolean_zeroPage, hex_zeroPage) = checkZeroPage(parameter, command)
-            if (boolean_zeroPage) { hex.addAll(hex_zeroPage); continue; Log.d("zeroPage", command) }
+            if (boolean_zeroPage) { hex.addAll(hex_zeroPage); continue }
             val (boolean_zeroPageX, hex_zeroPageX) = checkZeroPageX(parameter, command)
-            if (boolean_zeroPageX) { hex.addAll(hex_zeroPageX); continue; Log.d("zeroPageX", command) }
+            if (boolean_zeroPageX) { hex.addAll(hex_zeroPageX); continue }
             val (boolean_zeroPageY, hex_zeroPageY) = checkZeroPageY(parameter, command)
-            if (boolean_zeroPageY) { hex.addAll(hex_zeroPageY); continue; Log.d("zeroPageY", command) }
+            if (boolean_zeroPageY) { hex.addAll(hex_zeroPageY); continue }
             val (boolean_absoluteX, hex_absoluteX) = checkAbsoluteX(parameter, command)
-            if (boolean_absoluteX) { hex.addAll(hex_absoluteX); continue; Log.d("absoluteX", command) }
+            if (boolean_absoluteX) { hex.addAll(hex_absoluteX); continue }
             val (boolean_absoluteY, hex_absoluteY) = checkAbsoluteY(parameter, command)
-            if (boolean_absoluteY) { hex.addAll(hex_absoluteY); continue; Log.d("absoluteY", command) }
+            if (boolean_absoluteY) { hex.addAll(hex_absoluteY); continue }
             val (boolean_indirect, hex_indirect) = checkIndirect(parameter, command)
-            if (boolean_indirect) { hex.addAll(hex_indirect); continue; Log.d("indirect", command) }
+            if (boolean_indirect) { hex.addAll(hex_indirect); continue }
             val (boolean_indirectX, hex_indirectX) = checkIndirectX(parameter, command)
-            if (boolean_indirectX) { hex.addAll(hex_indirectX); continue; Log.d("indirectX", command) }
+            if (boolean_indirectX) { hex.addAll(hex_indirectX); continue }
             val (boolean_indirectY, hex_indirectY) = checkIndirectY(parameter, command)
-            if (boolean_indirectY) { hex.addAll(hex_indirectY); continue; Log.d("indirectY", command) }
+            if (boolean_indirectY) { hex.addAll(hex_indirectY); continue }
             val (boolean_absolute, hex_absolute) = checkAbsolute(parameter, command)
-            if (boolean_absolute) { hex.addAll(hex_absolute); continue; Log.d("absolute", command) }
+            if (boolean_absolute) { hex.addAll(hex_absolute); continue }
             val (boolean_relative, hex_relative) = checkRelative(parameter, command)
-            if (boolean_relative) { hex.addAll(hex_relative); continue; Log.d("relative", command) }
+            if (boolean_relative) { hex.addAll(hex_relative); continue }
         }
         return hex
     }
 
-    fun loadMemoryAssembly(assembly: String, startAddress: Int = 0x8000) {
+    fun loadMemoryAssembly(assembly: String, startAddress: Int = 0x8000): Map<Int, Disassembly> {
         val rom : MutableList<Int> = mutableListOf()
         branchOutOfRange = false
 //        reset()
@@ -438,8 +438,7 @@ class Disassembler : CPU() {
         if (branchOutOfRange) throw Exception("BRANCH OUT OF RANGE")
         val testRom : MutableList<String> = mutableListOf()
         rom.forEach { testRom.add(it.toString(16).uppercase()) }
-        Log.d("rom", testRom.toString())
-        loadMemory(rom, startAddress)
+        return loadMemory(rom, startAddress)
     }
 
     fun loadMemory(rom: MutableList<Int>, startAddress: Int = 0x8000): Map<Int, Disassembly> {
@@ -451,10 +450,10 @@ class Disassembler : CPU() {
         memory.write(0xFFFC, 0x00)
         memory.write(0xFFFC + 1, 0x80)
         rom.forEachIndexed{i,_ -> memory.ram[i + startAddress] = rom[i] }
-        return disassembleTest(startAddress, startAddress + rom.size - 1)
+        return disassemble(startAddress, startAddress + rom.size - 1)
     }
 
-    fun disassembleTest(start: Int = 0x8000, stop: Int = 0xFFFF): Map<Int, Disassembly>{
+    fun disassemble(start: Int = 0x8000, stop: Int = 0xFFFF): Map<Int, Disassembly>{
         val disassembled: MutableMap<Int, Disassembly> = mutableMapOf()
         var currentAddress : Int = start
         var savedAddress: Int
@@ -525,8 +524,19 @@ class Disassembler : CPU() {
         }
 
 //        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
+        Log.d("disassembled", disassembled.toString())
         return disassembled
     }
+
+    fun step() {
+        while (cycles > 0) {
+            clock()
+        }
+        clock()
+//        logTest()
+    }
+
+//    TEST FUNCTIONS
 
     private fun outputTestDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){
         File(path).printWriter().use { out ->
@@ -539,14 +549,6 @@ class Disassembler : CPU() {
                 }
             }
         }
-    }
-
-    fun step() {
-        while (cycles > 0) {
-            clock()
-        }
-        clock()
-        logTest()
     }
 
 //    init {
