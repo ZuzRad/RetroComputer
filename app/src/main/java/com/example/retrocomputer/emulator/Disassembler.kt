@@ -2,12 +2,14 @@ package com.example.retrocomputer
 
 import android.util.Log
 import java.io.File
+import kotlin.math.log
 
 class Disassembler : CPU() {
 
     private val labels : MutableList<String> = mutableListOf()
     private var branchOutOfRange : Boolean = false
     private var branchPC : Int = 0
+    var stopMemory : Int = 0
 
     fun findLabel(label : String) : Boolean {
         labels.forEach {
@@ -449,10 +451,11 @@ class Disassembler : CPU() {
         memory.write(0xFFFC, 0x00)
         memory.write(0xFFFC + 1, 0x80)
         rom.forEachIndexed{i,_ -> memory.ram[i + startAddress] = rom[i] }
-        return disassemble(startAddress, startAddress + rom.size - 1)
+        return disassemble(startAddress, startAddress + rom.size)
     }
 
     fun disassemble(start: Int = 0x8000, stop: Int = 0xFFFF): Map<Int, Disassembly>{
+        stopMemory = stop
         val disassembled: MutableMap<Int, Disassembly> = mutableMapOf()
         var currentAddress : Int = start
         var savedAddress: Int
@@ -523,7 +526,9 @@ class Disassembler : CPU() {
         }
 
         reset()
-        while(PC != stop) step()
+        Log.d("stop", stop.toString())
+        while(PC < stop) {Log.d("PC", PC.toString());step()}
+        Log.d("PC", PC.toString())
 //        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
         return disassembled
     }
@@ -598,11 +603,11 @@ class Disassembler : CPU() {
 
     fun logMemoryTest(page: Int, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
         var out = "\n" + "-".repeat(55) + " \n\n"
-        out += showPageTest(0x00) + "\n" + showPageTest(page)
+        out += showPage(0x00) + "\n" + showPage(page)
         File(path).appendText(out + "\n")
     }
 
-    fun showPageTest(page: Int = 0): String {
+    fun showPage(page: Int = 0): String {
         var out = ""
         for(i in 0..15) {
             var line = "$%04X:  ".format((i * 16) + page)

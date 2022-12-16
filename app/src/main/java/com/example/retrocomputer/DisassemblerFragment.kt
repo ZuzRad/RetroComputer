@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.text.HtmlCompat
 import com.example.retrocomputer.databinding.FragmentDisassemblerBinding
 import com.example.retrocomputer.databinding.FragmentEmulatorBinding
@@ -28,8 +29,9 @@ class DisassemblerFragment : Fragment() {
 
     private var _binding: FragmentDisassemblerBinding? = null
     private val binding get() = _binding!!
-    private val disassembler : Disassembler = Disassembler()
+    private lateinit var disassembler : Disassembler
     private lateinit var disassembled : Map<Int, Disassembly>
+    private var ROMstate : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,15 +45,38 @@ class DisassemblerFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentDisassemblerBinding.inflate(inflater, container, false)
+        disassembler = Disassembler()
         assembly?.let { disassembled = disassembler.loadMemoryAssembly(it) }
-//        disassembled.forEach{(k,v) ->
-//            if(k in 0x8000..(0x8000 + disassembled.size)){
-//                out.println("${k.toString().padStart(5, '0')}     $v ")
-//            }
-//        }
 
-        var flagN : String; var flagV : String; var flagU : String; var flagB : String
-        var flagD : String; var flagI : String; var flagZ : String; var flagC : String
+        updateUI()
+
+        binding.textViewMemory.text = disassembler.showPage(0x00)
+
+        binding.buttSwitch1.setOnClickListener {
+            binding.textViewMemory.text = disassembler.showPage(0x00)
+            ROMstate = false
+        }
+        binding.buttSwitch2.setOnClickListener {
+            binding.textViewMemory.text = disassembler.showPage(0x8000)
+            ROMstate = true
+        }
+
+        binding.buttReset.setOnClickListener {
+            disassembler.reset()
+            updateUI()
+        }
+        binding.buttStep.setOnClickListener {
+            if (disassembler.PC < disassembler.stopMemory) disassembler.step()
+            else Toast.makeText(context, "To continue you must reset the CPU", Toast.LENGTH_SHORT).show()
+            updateUI()
+        }
+
+        return binding.root
+    }
+
+    fun updateUI() {
+        val flagN : String; val flagV : String; val flagU : String; val flagB : String
+        val flagD : String; val flagI : String; val flagZ : String; val flagC : String
 
         if (disassembler.getFlag(disassembler.flagShiftN) == 1) flagN = "<font color=${Color.GREEN}>N</font>"
         else flagN = "<font color=${Color.RED}>N</font>"
@@ -69,34 +94,23 @@ class DisassemblerFragment : Fragment() {
         else flagZ = "<font color=${Color.RED}>Z</font>"
         if (disassembler.getFlag(disassembler.flagShiftC) == 1) flagC = "<font color=${Color.GREEN}>C</font>"
         else flagC = "<font color=${Color.RED}>C</font>"
-        Log.d("disassembler", disassembler.A.toString(16))
 
         binding.textViewFirstLine.text = HtmlCompat.fromHtml("<string>" +
-            "A: ${disassembler.A} X: ${disassembler.X} Y: ${disassembler.Y} " +
-                "SP: ${disassembler.SP} PC: ${disassembler.PC}" +
+                "A: ${disassembler.A} X: ${disassembler.X} Y: ${disassembler.Y} " +
+                "<br>SP: ${disassembler.SP} PC: ${disassembler.PC}" +
                 "<br>FLAGS: $flagN $flagV $flagU $flagB $flagD $flagI $flagZ $flagC" +
                 "</string>"
             , HtmlCompat.FROM_HTML_MODE_LEGACY)
 
         binding.textViewSecondLine.text = "$${disassembler.PC.toString(16).uppercase()}: " +
-                "${disassembler.lookup[disassembler.opcode].name} " +
-                "${disassembled[disassembler.PC]!!.assembly.removeRange(0,9).trim()} " +
-                "{${disassembler.lookup[disassembler.opcode].mode.name}} | " +
-                "${disassembled[disassembler.PC]!!.hex.trim()}"
+                "${disassembled[disassembler.PC]?.assembly?.removeRange(0,5)?.trim()} " +
+                "{${disassembled[disassembler.PC]?.instruction?.mode?.name}} | " +
+                "${disassembled[disassembler.PC]?.hex?.trim()}"
 
-        var stringRAM = disassembler.showPageTest(0x00)
-        var stringROM = disassembler.showPageTest(0x8000)
-        var stringASCII = disassembler.displayASCII()
+        binding.textViewAscii.text = disassembler.displayASCII()
 
-        binding.textViewAscii.text = stringASCII
-        binding.textViewMemory.text = stringRAM
-        binding.buttSwitch1.setOnClickListener {
-            binding.textViewMemory.text = stringRAM
-        }
-        binding.buttSwitch2.setOnClickListener {
-            binding.textViewMemory.text = stringROM
-        }
-        return binding.root
+        if (ROMstate) binding.textViewMemory.text = disassembler.showPage(0x8000)
+        else if (!ROMstate) binding.textViewMemory.text = disassembler.showPage(0x00)
     }
 
     companion object {

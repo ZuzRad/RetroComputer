@@ -47,7 +47,7 @@ class EmulatorFragment : Fragment() {
             }
         }
 
-       val edittext= view.findViewById<EditText>(R.id.textView3)
+       val edittext= view.findViewById<EditText>(R.id.textView_assemble)
 
         val myButton1 = view.findViewById<Button>(R.id.butt1)
         myButton1.setOnClickListener{

@@ -12,6 +12,4 @@ Index     Address   Assembly            Hex Dump     Mode   Cycles
 32787     $8013 DEY                     88           IMP     2 
 32788     $8014 BNE FA [$8110]          D0 FA        REL     2 
 32790     $8016 STA $0002               8D 02 00     ABS     4 
-32793     $8019 NOP                     EA           IMP     2 
-32794     $801A NOP                     EA           IMP     2 
-32795     $801B NOP                     EA           IMP     2 
+32793     $8019 NOP                     EA           IMP     2

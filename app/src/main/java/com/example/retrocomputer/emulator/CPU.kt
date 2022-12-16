@@ -78,9 +78,13 @@ open class CPU(val memory: Memory = Memory()) {
         absoluteAddress = 0x0000
         fetched = 0x00
         cycles = 8
+
+        for (i in 0x0000..0x1000) {
+            memory.ram[i] = 0x00
+        }
     }
 
-    fun irq() {     // Interrupt Request
+    fun irq() {
         if (getFlag(flagShiftI) == (0)) {
             memory.write((0x0100 + SP), (PC shr 8) and 0x00FF)
             SP--
@@ -101,7 +105,7 @@ open class CPU(val memory: Memory = Memory()) {
             cycles = 7
         }
     }
-    fun nmi() {     // Non-Maskable Interrupt
+    fun nmi() {
         memory.write((0x0100 + SP), (PC shr 8) and 0x00FF)
         SP--
         memory.write((0x0100 + SP), PC and 0x00FF)
