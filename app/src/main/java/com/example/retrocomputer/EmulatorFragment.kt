@@ -18,7 +18,6 @@ class EmulatorFragment : Fragment() {
 
     private var _binding: FragmentEmulatorBinding? = null
     private val binding get() = _binding!!
-    private var assembly : String = ""
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -34,10 +33,11 @@ class EmulatorFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+       val edittext= view.findViewById<EditText>(R.id.textView_assemble)
         val myButton = view.findViewById<Button>(R.id.butt_uruchom)
         myButton.setOnClickListener{
-            if (assembly.length > 6) {
-                val fragment : Fragment = DisassemblerFragment.newInstance(assembly)
+            if (edittext.text.toString().length > 6) {
+                val fragment : Fragment = DisassemblerFragment.newInstance(edittext.text.toString())
                 val fragmentManager = requireActivity().supportFragmentManager
                 val fragmentTransaction = fragmentManager.beginTransaction()
                 fragmentTransaction.replace(R.id.frameLayout, fragment)
@@ -47,11 +47,10 @@ class EmulatorFragment : Fragment() {
             }
         }
 
-       val edittext= view.findViewById<EditText>(R.id.textView_assemble)
 
         val myButton1 = view.findViewById<Button>(R.id.butt1)
         myButton1.setOnClickListener{
-            assembly = "LDA #$48\n" +
+            val assembly = "LDA #$48\n" +
                     "STA $0000\n" +
                     "LDA #$45\n" +
                     "STA $0001\n" +
@@ -78,7 +77,7 @@ class EmulatorFragment : Fragment() {
 
         val myButton2 = view.findViewById<Button>(R.id.butt2)
         myButton2.setOnClickListener{
-            assembly ="LDX #$28\n" +
+            val assembly ="LDX #$28\n" +
                     "STX $0000\n" +
                     "LDX #$30\n" +
                     "STX $0001\n" +
@@ -121,7 +120,7 @@ class EmulatorFragment : Fragment() {
 
         val myButton3 = view.findViewById<Button>(R.id.butt3)
         myButton3.setOnClickListener{
-            assembly = "LDY #\$3A\n" +
+            val assembly = "LDY #\$3A\n" +
                     "STY \$0000\n" +
                     "LDY #\$29\n" +
                     "STY \$0001\n" +
@@ -168,7 +167,6 @@ class EmulatorFragment : Fragment() {
                     }
                     val content = total.toString()
                     edittext.setText(content)
-                    assembly = content
                 } catch (e: Exception) {
                 }
             }
