@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         toggle.syncState()
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        replaceFragment(StronaGlownaFragment(),"Retro_Komputer")
+        replaceFragment(StronaGlownaFragment(),"Strona Główna")
         navView.setNavigationItemSelectedListener {
 
             it.isChecked=true
