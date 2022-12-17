@@ -28,7 +28,9 @@
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/nav_menu"
         android:layout_gravity="start"
+        app:itemTextColor="@color/buttonText"
         android:fitsSystemWindows="true"
+        android:background="@color/appBackground"
         >
 
     </com.google.android.material.navigation.NavigationView>

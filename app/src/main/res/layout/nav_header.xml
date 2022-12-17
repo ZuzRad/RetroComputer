@@ -18,8 +18,8 @@
         android:paddingTop="8dp"
         android:text="Retro Computer"
         android:textSize="20dp"
-        android:textStyle="bold"
-        android:textColor="@color/black"/>
+        android:textColor="@color/buttonText"
+        android:textStyle="bold" />
 
     <View
         android:layout_width="match_parent"
