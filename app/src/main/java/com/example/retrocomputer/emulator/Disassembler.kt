@@ -525,11 +525,9 @@ class Disassembler : CPU() {
                 instruction, hex.joinToString(" "){"%02X".format(it)})
         }
 
-        reset()
-        Log.d("stop", stop.toString())
-        while(PC < stop) {Log.d("PC", PC.toString());step()}
-        Log.d("PC", PC.toString())
-//        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
+//        reset()
+//        while(PC < stop) step()
+        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
         return disassembled
     }
 

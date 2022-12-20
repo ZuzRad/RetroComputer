@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-class CPUTest {
+class CPUTest1 {
     private val cpu: Disassembler = Disassembler()
 
     @Before
@@ -99,7 +99,5 @@ class CPUTest {
         cpu.step() // NOP
         cpu.step() // NOP
         cpu.step() // NOP
-
-        cpu.logMemoryTest(startAddress)
     }
 }
