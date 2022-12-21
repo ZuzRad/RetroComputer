@@ -86,9 +86,9 @@ open class CPU(val memory: Memory = Memory()) {
 
     fun irq() {
         if (getFlag(flagShiftI) == (0)) {
-            memory.write((0x0100 + SP), (PC shr 8) and 0x00FF)
+            memory.write(0x0100 + SP, (PC shr 8) and 0x00FF)
             SP--
-            memory.write((0x0100 + SP), PC and 0x00FF)
+            memory.write(0x0100 + SP, PC and 0x00FF)
             SP--
 
             setFlag(flagShiftB, false)
@@ -106,9 +106,9 @@ open class CPU(val memory: Memory = Memory()) {
         }
     }
     fun nmi() {
-        memory.write((0x0100 + SP), (PC shr 8) and 0x00FF)
+        memory.write(0x0100 + SP, (PC shr 8) and 0x00FF)
         SP--
-        memory.write((0x0100 + SP), PC and 0x00FF)
+        memory.write(0x0100 + SP, PC and 0x00FF)
         SP--
 
         setFlag(flagShiftB, false)
@@ -472,17 +472,17 @@ open class CPU(val memory: Memory = Memory()) {
         PC++
 
         setFlag(flagShiftI,true)
-        memory.write((0x0100 + SP), ((PC shr 8) and 0x00FF))
+        memory.write(0x0100 + SP, (PC shr 8) and 0x00FF)
         SP--
-        memory.write((0x0100 + SP), (PC and 0x00FF))
+        memory.write(0x0100 + SP, PC and 0x00FF)
         SP--
 
         setFlag(flagShiftB,true)
-        memory.write((0x0100 + SP), status)
+        memory.write(0x0100 + SP, status)
         SP--
         setFlag(flagShiftB,false)
 
-        PC = (memory.read(0xFFFE)) or (memory.read(0xFFFF) shl 8)
+        PC = memory.read(0xFFFE) or (memory.read(0xFFFF) shl 8)
         return 0
     }
     fun CMP() : Int {
@@ -495,32 +495,32 @@ open class CPU(val memory: Memory = Memory()) {
     }
     fun CPX() : Int {
         fetch()
-        temp = (X - fetched)
+        temp = X - fetched
         setFlag(flagShiftC, X >= fetched)
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
-        setFlag(flagShiftN, (temp and 0x0080)>0)
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x0000)
+        setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
     fun CPY() : Int {
         fetch()
-        temp = (Y - fetched)
+        temp = Y - fetched
         setFlag(flagShiftC, Y >= fetched)
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x0000)
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
     fun DEC() : Int {
         fetch()
-        temp = (fetched - 1)
-        memory.write(absoluteAddress, (temp and 0x00FF))
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        temp = fetched - 1
+        memory.write(absoluteAddress, temp and 0x00FF)
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x0000)
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
     fun EOR() : Int {
         fetch()
         A = A xor fetched
-        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftZ, A == 0x00)
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
@@ -554,9 +554,9 @@ open class CPU(val memory: Memory = Memory()) {
     }
     fun INC() : Int {
         fetch()
-        temp = (fetched + 1)
-        memory.write(absoluteAddress, (temp and 0x00FF))
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        temp = fetched + 1
+        memory.write(absoluteAddress, temp and 0x00FF)
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x0000)
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         return 0
     }
@@ -567,9 +567,9 @@ open class CPU(val memory: Memory = Memory()) {
     fun JSR() : Int {
         PC--
 
-        memory.write(((0x0100) + SP), ((PC shr 8) and 0x00FF))
+        memory.write(0x0100 + SP, (PC shr 8) and 0x00FF)
         SP--
-        memory.write(((0x0100) + SP), (PC and 0x00FF))
+        memory.write(0x0100 + SP, PC and 0x00FF)
         SP--
 
         PC = absoluteAddress
@@ -578,34 +578,34 @@ open class CPU(val memory: Memory = Memory()) {
     fun LDA() : Int {
         fetch()
         A=fetched
-        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftZ, A == 0x00)
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
     fun LDX() : Int {
         fetch()
         X=fetched
-        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftZ, X == 0x00)
         setFlag(flagShiftN, (X and 0x80) > 0)
         return 1
     }
     fun LDY() : Int {
         fetch()
         Y=fetched
-        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftZ, Y == 0x00)
         setFlag(flagShiftN, (Y and 0x80) > 0)
         return 1
     }
     fun LSR() : Int {
         fetch()
         setFlag(flagShiftC, (fetched and 0x0001) > 0)
-        temp = (fetched shr 1)
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        temp = fetched shr 1
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x0000)
         setFlag(flagShiftN, (temp and 0x0080) > 0)
         if(lookup[opcode].mode == AddressingMode.IMP)
-            A = (temp and 0x00FF)
+            A = temp and 0x00FF
         else
-            memory.write(absoluteAddress, (temp and 0x00FF))
+            memory.write(absoluteAddress, temp and 0x00FF)
         return 0
     }
     fun NOP() : Int {
@@ -617,55 +617,55 @@ open class CPU(val memory: Memory = Memory()) {
     fun ORA() : Int {
         fetch()
         A = A or fetched
-        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftZ, A == 0x00)
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 1
     }
     fun TAX() : Int {
         X = A
-        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftZ, X == 0x00)
         setFlag(flagShiftN, (X and 0x80) > 0)
         return 0
     }
     fun TXA() : Int {
         A = X
-        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftZ, A == 0x00)
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 0
     }
     fun DEX() : Int {
         X--
-        setFlag(flagShiftZ, X == (0x00))
-        setFlag(flagShiftN, (X and (0x80)) > 0)
+        setFlag(flagShiftZ, X == 0x00)
+        setFlag(flagShiftN, (X and 0x80) > 0)
         return 0
     }
     fun INX() : Int {
         X++
-        setFlag(flagShiftZ, X == (0x00))
+        setFlag(flagShiftZ, X == 0x00)
         setFlag(flagShiftN, (X and 0x80) > 0)
         return 0
     }
     fun TAY() : Int {
         Y = A
-        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftZ, Y == 0x00)
         setFlag(flagShiftN, (Y and 0x80) > 0)
         return 0
     }
     fun TYA() : Int {
         A = Y
-        setFlag(flagShiftZ, A == (0x00))
+        setFlag(flagShiftZ, A == 0x00)
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 0
     }
     fun DEY() : Int {
         Y--
-        setFlag(flagShiftZ, Y == (0x00))
-        setFlag(flagShiftN, (Y and (0x80)) > 0)
+        setFlag(flagShiftZ, Y == 0x00)
+        setFlag(flagShiftN, (Y and 0x80) > 0)
         return 0
     }
     fun INY() : Int {
         Y++
-        setFlag(flagShiftZ, Y == (0x00))
+        setFlag(flagShiftZ, Y == 0x00)
         setFlag(flagShiftN, (Y and 0x80) > 0)
         return 0
     }
@@ -673,43 +673,43 @@ open class CPU(val memory: Memory = Memory()) {
         fetch()
         temp = (getFlag(flagShiftC) shl 7) or (fetched shr 1)
         setFlag(flagShiftC, (fetched and 0x01) > 0)
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x00))
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x00)
         setFlag(flagShiftN, (temp and 0x0080) > 0)
-        if(lookup[opcode].mode == AddressingMode.IMP)
-            A = (temp and 0x00FF)
+        if (lookup[opcode].mode == AddressingMode.IMP)
+            A = temp and 0x00FF
         else
-            memory.write(absoluteAddress, (temp and 0x00FF))
+            memory.write(absoluteAddress, temp and 0x00FF)
         return 0
     }
     fun ROL() : Int {
         fetch()
-        temp = (fetched shl 1) or (getFlag(flagShiftC))
+        temp = (fetched shl 1) or getFlag(flagShiftC)
         setFlag(flagShiftC, (temp and 0xFF00) > 0)
-        setFlag(flagShiftZ, (temp and 0x00FF) == (0x0000))
+        setFlag(flagShiftZ, (temp and 0x00FF) == 0x0000)
         setFlag(flagShiftN, (temp and 0x0080) > 0)
-        if(lookup[opcode].mode == AddressingMode.IMP)
-            A = (temp and 0x00FF)
+        if (lookup[opcode].mode == AddressingMode.IMP)
+            A = temp and 0x00FF
         else
-            memory.write(absoluteAddress, (temp and 0x00FF))
+            memory.write(absoluteAddress, temp and 0x00FF)
         return 0
     }
     fun RTI() : Int {
         SP++
-        status = memory.read((0x0100 + SP))
+        status = memory.read(0x0100 + SP)
         status = status and flagShiftB.inv()
         status = status and flagShiftU.inv()
 
         SP++
-        PC = memory.read((0x0100 + SP))
+        PC = memory.read(0x0100 + SP)
         SP++
-        PC = PC or ((memory.read((0x0100 + SP))) shl 8)
+        PC = PC or (memory.read(0x0100 + SP) shl 8)
         return 0
     }
     fun RTS() : Int {
         SP++
-        PC = (memory.read((0x0100 + SP)))
+        PC = memory.read(0x0100 + SP)
         SP++
-        PC = PC or (memory.read((0x0100 + SP)) shl 8)
+        PC = PC or (memory.read(0x0100 + SP) shl 8)
 
         PC++
         return 0
@@ -736,25 +736,25 @@ open class CPU(val memory: Memory = Memory()) {
     }
     fun TSX() : Int {
         X = SP
-        setFlag(flagShiftZ, X == (0x00))
-        setFlag(flagShiftN, (X and 0x80)>0)
+        setFlag(flagShiftZ, X == 0x00)
+        setFlag(flagShiftN, (X and 0x80) > 0)
         return 0
 
     }
     fun PHA() : Int {
-        memory.write((0x0100 + SP), A)
+        memory.write(0x0100 + SP, A)
         SP--
         return 0
     }
     fun PLA() : Int {
         SP++
-        A = memory.read((0x0100 + SP))
+        A = memory.read(0x0100 + SP)
         setFlag(flagShiftZ, A == (0x00))
         setFlag(flagShiftN, (A and 0x80) > 0)
         return 0
     }
     fun PHP() : Int {
-        memory.write((0x0100 + SP), status or flagShiftB or flagShiftU)
+        memory.write(0x0100 + SP, status or flagShiftB or flagShiftU)
         setFlag(flagShiftB, false)
         setFlag(flagShiftU, false)
         SP--
@@ -762,7 +762,7 @@ open class CPU(val memory: Memory = Memory()) {
     }
     fun PLP() : Int {
         SP++
-        status = memory.read((0x0100 + SP))
+        status = memory.read(0x0100 + SP)
         setFlag(flagShiftU, true)
         return 0
     }

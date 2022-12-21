@@ -20,7 +20,7 @@ class EmulatorFragment : Fragment() {
     private val binding get() = _binding!!
 
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentEmulatorBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -149,28 +149,27 @@ class EmulatorFragment : Fragment() {
 
 
         val getTxt = registerForActivityResult(
-            ActivityResultContracts.GetContent(),
-            ActivityResultCallback {
+            ActivityResultContracts.GetContent()
+        ) {
 
-                val uri = it
-                try {
-                    val `in`: InputStream? = uri?.let { it1 ->
-                        context?.getContentResolver()?.openInputStream(
-                            it1
-                        )
-                    }
-                    val r = BufferedReader(InputStreamReader(`in`))
-                    val total = StringBuilder()
-                    var line: String?
-                    while (r.readLine().also { line = it } != null) {
-                        total.append(line).append('\n')
-                    }
-                    val content = total.toString()
-                    edittext.setText(content)
-                } catch (e: Exception) {
+            val uri = it
+            try {
+                val `in`: InputStream? = uri?.let { it1 ->
+                    context?.contentResolver?.openInputStream(
+                        it1
+                    )
                 }
+                val r = BufferedReader(InputStreamReader(`in`))
+                val total = StringBuilder()
+                var line: String?
+                while (r.readLine().also { it1 -> line = it1 } != null) {
+                    total.append(line).append('\n')
+                }
+                val content = total.toString()
+                edittext.setText(content)
+            } catch (_: Exception) {
             }
-        )
+        }
         val myButtonWczytaj = view.findViewById<Button>(R.id.butt_wczytaj)
         myButtonWczytaj.setOnClickListener{
             getTxt.launch("text/plain")

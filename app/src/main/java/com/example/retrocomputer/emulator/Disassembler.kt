@@ -525,9 +525,9 @@ class Disassembler : CPU() {
                 instruction, hex.joinToString(" "){"%02X".format(it)})
         }
 
-//        reset()
-//        while(PC < stop) step()
-        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
+        reset()
+        while(PC < stop) step()
+//        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
         return disassembled
     }
 
@@ -539,15 +539,16 @@ class Disassembler : CPU() {
 //        logTest()
     }
 
-    private fun hexToAscii(hexStr: String): String? {
-        val output = StringBuilder("")
-        var i = 0
-        while (i < hexStr.length) {
-            val str = hexStr.substring(i, i + 2)
-            output.append(str.toInt(16).toChar())
-            i += 2
+    fun displayMemory(page: Int = 0): String {
+        var out = ""
+        for(i in 0..15) {
+            var line = "$%04X:  ".format((i * 16) + page)
+            for (j in 0..15) {
+                line += "%02X ".format(memory.ram[((i * 16) + j) + page])
+            }
+            out += line + "\n"
         }
-        return output.toString()
+        return out
     }
 
     fun displayASCII() : String {
@@ -562,58 +563,59 @@ class Disassembler : CPU() {
         return output
     }
 
-//    TEST FUNCTIONS
-
-    private fun outputTestDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){
-        File(path).printWriter().use { out ->
-            out.println("-".repeat(66))
-            out.println("Index     Address   Assembly            Hex Dump     Mode   Cycles")
-            out.println("-".repeat(66))
-            disassembled.forEach{(k,v) ->
-                if(k in start..stop){
-                    out.println("${k.toString().padStart(5, '0')}     $v ")
-                }
-            }
+    private fun hexToAscii(hexStr: String): String {
+        val output = StringBuilder("")
+        var i = 0
+        while (i < hexStr.length) {
+            val str = hexStr.substring(i, i + 2)
+            output.append(str.toInt(16).toChar())
+            i += 2
         }
+        return output.toString()
     }
 
+
+//    TEST/DEBUG FUNCTIONS
+
+//    private fun outputTestDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){
+//        File(path).printWriter().use { out ->
+//            out.println("-".repeat(66))
+//            out.println("Index     Address   Assembly            Hex Dump     Mode   Cycles")
+//            out.println("-".repeat(66))
+//            disassembled.forEach{(k,v) ->
+//                if(k in start..stop){
+//                    out.println("${k.toString().padStart(5, '0')}     $v ")
+//                }
+//            }
+//        }
+//    }
+//
 //    init {
 //        logTest(true)
 //    }
+//
+//    private fun logTest(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
+//        if(!File(path).exists() || init){
+//            File(path).printWriter().use{ out ->
+//                out.println("-".repeat(55))
+//                out.println("OP    INS    A     X     Y     PC      SP     NVUBDIZC")
+//                out.println("-".repeat(55))
+//            }
+//        } else {
+//            File(path).appendText(showDebugTest() + "\n")
+//        }
+//    }
+//
+//    private fun showDebugTest(): String {
+//        return "%02X    %s    %02X    %02X    %02X    %04X    %02X    ".format(
+//            opcode, lookup[opcode].name, A, X, Y, PC, SP) +
+//                " ${status.toString(2).padStart(8,'0')}"
+//    }
+//
+//    fun logMemoryTest(page: Int, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
+//        var out = "\n" + "-".repeat(55) + " \n\n"
+//        out += displayMemory(0x00) + "\n" + displayMemory(page)
+//        File(path).appendText(out + "\n")
+//    }
 
-    private fun logTest(init: Boolean = false, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
-        if(!File(path).exists() || init){
-            File(path).printWriter().use{ out ->
-                out.println("-".repeat(55))
-                out.println("OP    INS    A     X     Y     PC      SP     NVUBDIZC")
-                out.println("-".repeat(55))
-            }
-        } else {
-            File(path).appendText(showDebugTest() + "\n")
-        }
-    }
-
-    private fun showDebugTest(): String {
-        return "%02X    %s    %02X    %02X    %02X    %04X    %02X    ".format(
-            opcode, lookup[opcode].name, A, X, Y, PC, SP) +
-                " ${status.toString(2).padStart(8,'0')}"
-    }
-
-    fun logMemoryTest(page: Int, path: String = "./src/main/java/com/example/retrocomputer/log.txt"){
-        var out = "\n" + "-".repeat(55) + " \n\n"
-        out += showPage(0x00) + "\n" + showPage(page)
-        File(path).appendText(out + "\n")
-    }
-
-    fun showPage(page: Int = 0): String {
-        var out = ""
-        for(i in 0..15) {
-            var line = "$%04X:  ".format((i * 16) + page)
-            for (j in 0..15) {
-                line += "%02X ".format(memory.ram[((i * 16) + j) + page])
-            }
-            out += line + "\n"
-        }
-        return out
-    }
 }
