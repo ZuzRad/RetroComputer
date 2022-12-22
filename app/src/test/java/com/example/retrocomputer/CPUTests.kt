@@ -100,7 +100,7 @@ class CPUTests {
         disassembler.step()
         Assert.assertEquals(0x02, disassembler.A)
 
-        // IdirectZ,X + IMPlied + ZeroPage,Y
+        // IndirectZ,X + IMPlied + ZeroPage,Y
         // + TXA (Transfer X to A) + STY (STore Y register) + STX (STore X register)
         assembly = "LDA #$45\n" +
                 "STA $1074\n" +

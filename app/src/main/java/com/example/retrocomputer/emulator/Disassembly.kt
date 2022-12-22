@@ -1,5 +1,6 @@
 package com.example.retrocomputer
 
+// Struktura zdisassemblowanego kodu
 data class Disassembly(
     var address: Int,
     var assembly: String,

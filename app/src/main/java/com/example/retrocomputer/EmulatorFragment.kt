@@ -34,6 +34,7 @@ class EmulatorFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
        val edittext= view.findViewById<EditText>(R.id.textView_assemble)
+        // Przycisk który przechodzi do disassemblera
         val myButton = view.findViewById<Button>(R.id.butt_uruchom)
         myButton.setOnClickListener{
             if (edittext.text.toString().length > 6) {
@@ -47,6 +48,7 @@ class EmulatorFragment : Fragment() {
             }
         }
 
+//        Przyciski które wczytują pliki testowe
 
         val myButton1 = view.findViewById<Button>(R.id.butt1)
         myButton1.setOnClickListener{
@@ -147,7 +149,7 @@ class EmulatorFragment : Fragment() {
             edittext.setText(assembly)
         }
 
-
+//        Funkcjonalność przycisku wczytującego pliki z pamięci urządzenia
         val getTxt = registerForActivityResult(
             ActivityResultContracts.GetContent()
         ) {

@@ -22,6 +22,7 @@ class StronaGlownaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Przycisk do przejścia do następnego fragmentu
         val myButton = view.findViewById<Button>(R.id.button1)
         myButton.setOnClickListener{
             val fragment : Fragment = EmulatorFragment()

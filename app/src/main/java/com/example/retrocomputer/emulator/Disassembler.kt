@@ -11,6 +11,7 @@ class Disassembler : CPU() {
     private var branchPC : Int = 0
     var stopMemory : Int = 0
 
+//    Funkcja sprawdzająca czy etykieta istnieje
     fun findLabel(label : String) : Boolean {
         labels.forEach {
             val nameAndAddr = it.split("|")
@@ -21,6 +22,7 @@ class Disassembler : CPU() {
         return false
     }
 
+//    Funkcja wyciągająca miejsce w pamięci do którego ma się przenieś program po napotkaniu etykiety
     fun getPCfromLabel(parameter: String) : Int {
         labels.forEach {
             val nameAndAddr = it.split("|")
@@ -31,6 +33,7 @@ class Disassembler : CPU() {
         return -1
     }
 
+//    Konwertuje parametr do wartości Byte
     private fun parseByteOperand(parameter: String) : Int {
         var value : Int = -1
         val checkRegexDecimal = Regex("^([0-9]{1,3})\$")
@@ -43,6 +46,7 @@ class Disassembler : CPU() {
         else -1
     }
 
+//    Konwertuje parametr do wartości Word(Short w kotlinie)
     private fun parseWordOperand(parameter: String) : Int {
         var value = -1
         var checkRegex = Regex("^\\\$([0-9a-f]{3,4})\$", RegexOption.IGNORE_CASE)
@@ -135,6 +139,7 @@ class Disassembler : CPU() {
             }
         }
 
+        //        Etykieta
         if (parameter.matches(Regex("^\\w+\$")) && opcodeIndex != -1) {
             hex.add(opcodeIndex)
             branchPC++
@@ -175,6 +180,7 @@ class Disassembler : CPU() {
             }
         }
 
+        //        Etykieta
         if (parameter.matches(Regex("^\\w+,X\$", RegexOption.IGNORE_CASE)) && opcodeIndex != -1) {
             val labelParameter = parameter.replace(Regex(",X\$", RegexOption.IGNORE_CASE), "")
             hex.add(opcodeIndex)
@@ -214,6 +220,7 @@ class Disassembler : CPU() {
             }
         }
 
+//        Etykieta
         if (parameter.matches(Regex("^\\w+,Y\$", RegexOption.IGNORE_CASE)) && opcodeIndex != -1) {
             val labelParameter = parameter.replace(Regex(",Y\$", RegexOption.IGNORE_CASE), "")
             hex.add(opcodeIndex)
@@ -274,6 +281,7 @@ class Disassembler : CPU() {
         }
         return Pair(false, hex)
     }
+
     private fun checkIndirectY(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
         if (command.isEmpty()) { return Pair(false, hex) }
@@ -292,6 +300,8 @@ class Disassembler : CPU() {
         }
         return Pair(false, hex)
     }
+
+    //        Etykieta
     private fun checkRelative(parameter : String, command : String) : Pair<Boolean, MutableList<Int>> {
         val hex : MutableList<Int> = mutableListOf()
         if (command.isEmpty()) { return Pair(false, hex) }
@@ -328,7 +338,7 @@ class Disassembler : CPU() {
             }
         }
 
-        // Label lo/hi
+        // Etykieta lo/hi
         if(parameter.matches(Regex("^#[<>]\\w+\$")) && opcodeIndex != -1) {
             val checkLabelRegex = Regex("^#[<>](\\w+)\$")
             val checkHiloRegex = Regex("^#([<>]).*\$")
@@ -365,12 +375,14 @@ class Disassembler : CPU() {
         assembly.split("\n").forEach { lines.add(it.trim()) }
         val hex : MutableList<Int> = mutableListOf()
 
+//        Pętla sprawdzająca każdą linię kodu
         for (line in lines) {
             var label : String; var command : String; var parameter : String
             if (line.isEmpty()) {
                 continue
             }
 
+//            Sprawdzamy czy zamiast komendy znajduje się w tej linii etykieta
             if (line.matches(Regex("^\\w+:"))) {
                 val checkLabelRegex = Regex("(^\\w+):.*\$")
                 label = checkLabelRegex.find(line)?.groupValues?.get(1)!!
@@ -385,6 +397,7 @@ class Disassembler : CPU() {
                 } else {
                     command = ""
                 }
+//                Jeśli nie to wyciągamy komendę (np. ADC) z linii kodu
             } else {
                 val checkCommandRegex = Regex("^(\\w+).*\$")
                 command = checkCommandRegex.find(line)?.groupValues?.get(1)!!
@@ -392,6 +405,7 @@ class Disassembler : CPU() {
 
             command = command.uppercase()
 
+//            Wyciągamy parametr z lini kodu (np. $0000)
             if (line.matches(Regex("^\\w+\\s+.*?\$"))) {
                 parameter = line.replace(Regex("^\\w+\\s+(.*?)"), "$1")
             } else if (line.matches(Regex("^\\w+\$"))) {
@@ -402,6 +416,7 @@ class Disassembler : CPU() {
 
             parameter = parameter.replace(" ", "")
 
+//            Sprawdzanie jaki tryb adresowania powinien zostać użyty dla danych wartości wyciągniętych z linii kodu
             val (boolean_implied, hex_implied) = checkImplied(parameter, command)
             if (boolean_implied) { hex.addAll(hex_implied); continue }
             val (boolean_immediate, hex_immediate) = checkImmediate(parameter, command)
@@ -436,6 +451,7 @@ class Disassembler : CPU() {
         labels.clear()
         branchPC = startAddress
         assemble(assembly).forEachIndexed{_, hex -> rom.add(hex)}
+//        Wyjątek jeśli jakaś etykieta znajduje się poza pamięcią procesora
         if (branchOutOfRange) throw Exception("BRANCH OUT OF RANGE")
         val testRom : MutableList<String> = mutableListOf()
         rom.forEach { testRom.add(it.toString(16).uppercase()) }
@@ -443,13 +459,10 @@ class Disassembler : CPU() {
     }
 
     fun loadMemory(rom: MutableList<Int>, startAddress: Int = 0x8000): Map<Int, Disassembly> {
-        if(startAddress < 0){
-            throw Exception("Start address '$startAddress' out of bounds. [0-${memory.ram.size}]")
-        } else if((startAddress + rom.size) > memory.ram.size){
-            throw Exception("ROM size too large (${rom.size}) for start address $startAddress")
-        }
+//        Potrzebne do uruchomienia procesora
         memory.write(0xFFFC, 0x00)
         memory.write(0xFFFC + 1, 0x80)
+
         rom.forEachIndexed{i,_ -> memory.ram[i + startAddress] = rom[i] }
         return disassemble(startAddress, startAddress + rom.size)
     }
@@ -460,6 +473,7 @@ class Disassembler : CPU() {
         var currentAddress : Int = start
         var savedAddress: Int
 
+//        Przydatne wyjątki podczas testowania aplikacji
         if(start > stop){
             throw Exception("Cannot start at position greater than stopping position")
         } else if(start < 0 || start > memory.ram.size){
@@ -468,12 +482,15 @@ class Disassembler : CPU() {
             throw Exception("Stop position '$stop' out of bounds")
         }
 
+//        Pętla dzieki której możemy wyświetlić później na ekranie instrukcje które
+//        wykonają się po kliknięciu "Step"
         while(currentAddress <= stop){
             savedAddress = currentAddress
             val instruction = lookup[memory.read(currentAddress)]
             val hex: MutableList<Int> = mutableListOf(lookup.indexOf(instruction))
             var asm = "$%04X ${instruction.name} ".format(currentAddress++)
 
+//            Sprawdzamy jaki jest tryb adresowania danej instrukcji, tak jak w kodzie assemblera.
             asm += when (instruction.mode) {
                 AddressingMode.IMP -> ""
                 AddressingMode.IMM -> {
@@ -521,16 +538,20 @@ class Disassembler : CPU() {
                     "%02X [$%04X]".format(hex[1], currentAddress + hex[1])
                 }
             }
+//            Przypisujemy do odpowiedniego adresu odpowiednie wartości aby pasowały do data klasy "Disassembly"
             disassembled[savedAddress] = Disassembly(savedAddress, asm.padEnd(30, ' '),
                 instruction, hex.joinToString(" "){"%02X".format(it)})
         }
 
+//        Na początku resetujemy procesor i emulujemy cały program
         reset()
         while(PC < stop) step()
 //        outputTestDisassembly("./src/main/java/com/example/retrocomputer/disassembly.txt", disassembled, start, stop)
         return disassembled
     }
 
+//    Funkcja która została przyczepiona do przycisku "Step"
+//    Ma za zadanie przemieszczać się po programie instrukcja po instrukcji
     fun step() {
         while (cycles > 0) {
             clock()
@@ -539,6 +560,7 @@ class Disassembler : CPU() {
 //        logTest()
     }
 
+//    Funkcja która wyświetla pamięć na ekranie
     fun displayMemory(page: Int = 0): String {
         var out = ""
         for(i in 0..15) {
@@ -551,6 +573,7 @@ class Disassembler : CPU() {
         return out
     }
 
+//    Funkcja która wyświetla grafikę znakową na ekranie
     fun displayASCII() : String {
         var output = ""
         for(i in 0..15) {
@@ -563,6 +586,7 @@ class Disassembler : CPU() {
         return output
     }
 
+//    Funkcja konwertująca liczby szesnastkowe do ASCII
     private fun hexToAscii(hexStr: String): String {
         val output = StringBuilder("")
         var i = 0
@@ -576,6 +600,8 @@ class Disassembler : CPU() {
 
 
 //    TEST/DEBUG FUNCTIONS
+//    używane z początku do testowania emulatora bez UI
+//    zapisywanie do pliku tekstowego
 
 //    private fun outputTestDisassembly(path: String, disassembled: Map<Int, Disassembly>, start: Int, stop: Int){
 //        File(path).printWriter().use { out ->

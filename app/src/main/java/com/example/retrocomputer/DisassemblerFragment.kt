@@ -33,26 +33,35 @@ class DisassemblerFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentDisassemblerBinding.inflate(inflater, container, false)
+
+//        Wczytujemy dane z procesora, który emuluje wcześniej zakodowany tekst do wartości szesnatkowych
         disassembler = Disassembler()
         assembly?.let { disassembled = disassembler.loadMemoryAssembly(it) }
 
         updateUI()
 
+//        Pamięć
         binding.textViewMemory.text = disassembler.displayMemory(0x00)
 
+//        Przycisk RAM
         binding.buttSwitch1.setOnClickListener {
             binding.textViewMemory.text = disassembler.displayMemory(0x00)
             ROMstate = false
         }
+
+//        Przycisk ROM
         binding.buttSwitch2.setOnClickListener {
             binding.textViewMemory.text = disassembler.displayMemory(0x8000)
             ROMstate = true
         }
 
+//        Przycisk Reset
         binding.buttReset.setOnClickListener {
             disassembler.reset()
             updateUI()
         }
+
+//        Przycisk Step
         binding.buttStep.setOnClickListener {
             if (disassembler.PC < disassembler.stopMemory) disassembler.step()
             else Toast.makeText(context, "To continue you must reset the CPU", Toast.LENGTH_SHORT).show()
@@ -64,6 +73,7 @@ class DisassemblerFragment : Fragment() {
 
     private fun updateUI() {
 
+//        Sprawdza czy flaga powinna świecić się na zielono lub czerwono
         val flagN : String = if (disassembler.getFlag(disassembler.flagShiftN) == 1) "<font color=${Color.GREEN}>N</font>"
         else "<font color=${Color.RED}>N</font>"
         val flagV : String = if (disassembler.getFlag(disassembler.flagShiftV) == 1) "<font color=${Color.GREEN}>V</font>"
@@ -81,6 +91,7 @@ class DisassemblerFragment : Fragment() {
         val flagC : String = if (disassembler.getFlag(disassembler.flagShiftC) == 1) "<font color=${Color.GREEN}>C</font>"
         else "<font color=${Color.RED}>C</font>"
 
+//        Pole tekstowe z aktualnymi wartościami procesora
         binding.textViewFirstLine.text = HtmlCompat.fromHtml("<string>" +
                 "A: ${disassembler.A} X: ${disassembler.X} Y: ${disassembler.Y} " +
                 "<br>SP: ${disassembler.SP} PC: ${disassembler.PC}" +
@@ -88,13 +99,16 @@ class DisassemblerFragment : Fragment() {
                 "</string>"
             , HtmlCompat.FROM_HTML_MODE_LEGACY)
 
+//        Pole tekstowe w którym znajduje się następna instrukcja która zostanie wykonana po wciśnięciu przycisku "Step"
         binding.textViewSecondLine.text = "$${disassembler.PC.toString(16).uppercase()}: " +
                 "${disassembled[disassembler.PC]?.assembly?.removeRange(0,5)?.trim()} " +
                 "{${disassembled[disassembler.PC]?.instruction?.mode?.name}} | " +
                 "${disassembled[disassembler.PC]?.hex?.trim()}"
 
+//        Pole tekstowe posiadające przekonwertowane wartości w pamięci RAM na litery za pomocą tablicy ASCII
         binding.textViewAscii.text = disassembler.displayASCII()
 
+//        Sprawdzamy czy powinnyśmy wyświetlić tablicę RAM czy ROM
         if (ROMstate) binding.textViewMemory.text = disassembler.displayMemory(0x8000)
         else if (!ROMstate) binding.textViewMemory.text = disassembler.displayMemory(0x00)
     }

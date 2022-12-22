@@ -16,8 +16,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Używamy aplikacji tylko w trybie pionowym
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
         setContentView(R.layout.activity_main)
+
+        // Inicjalizacja menu
         drawerLayout = findViewById(R.id.drawerLayout)
         val navView : NavigationView = findViewById(R.id.nav_view)
         toggle = ActionBarDrawerToggle(this,drawerLayout,R.string.open,R.string.close)
@@ -25,7 +30,10 @@ class MainActivity : AppCompatActivity() {
         toggle.syncState()
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        // Inicjalizacja pierwszego fragmentu
         replaceFragment(StronaGlownaFragment(),"Strona Główna")
+
+        // Listener na items w menu
         navView.setNavigationItemSelectedListener {
 
             it.isChecked=true
@@ -39,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Funkcja zmieniająca fragment
     private fun replaceFragment(fragment : Fragment, title:String){
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
@@ -48,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         setTitle(title)
     }
 
+    // Funkcja operująca menu
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(toggle.onOptionsItemSelected(item)){return true}
         return super.onOptionsItemSelected(item)
