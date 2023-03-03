@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/appBackground"
+    tools:context=".StronaGlownaFragment">
+
+        <TextView
+            android:background="@color/codeBackground"
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="10dp"
+            android:textAlignment="gravity"
+            android:gravity="top|left"
+            android:text="Witamy w aplikacji RetroComputer\nJest to aplikacja emulująca mikroprocesor MOS 6502.\n\nPo przejściu do zakładki emulator pojawi się pole do wpisania kodu assemblerowego oraz 5 przycisków.\n'Test1', 'Test2' oraz 'Test3' wyświetlają pliki testowe.\n'Wczytaj' umożliwia załadowanie pliku z pamięci urządzenia.\n'Start' zemuluje kod i wyświetli wyniki.\n\nNa samej górze ekranu pokaże nam się wynik w postaci grafiki znakowej. Użyto do tego tablicy ASCII.\nZaraz poniżej wyświetlona jest mapa pamięci RAM lub ROM aktualnego programu (którą można zmieniać za pomocą przycisków 'RAM' i 'ROM').\nPo kliknięciu przycisku 'Reset' program wyzeruje się, wraz z pamięcią RAM.\nZa pomocą przycisku 'Step' można ponownie, krok po kroku, wykonywać kolejne instrukcje zapisanego programu, oraz obserwować zmieniające się wartości w procesorze jak i pamięć RAM"
+            android:textSize="15dp"
+            android:layout_margin="10dp"
+            android:textColor="#FAFAFA"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.185" />
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Emulator"
+            android:padding="10dp"
+            android:textSize="20dp"
+            android:textColor="@color/buttonText"
+            android:background="@drawable/less_rounded_corner"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
